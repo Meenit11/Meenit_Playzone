@@ -1,8 +1,3 @@
-
-
-// app.use(express.static(path.join(__dirname)));
-
-
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
@@ -113,9 +108,13 @@ io.on('connection', (socket) => {
         question: question
       });
       
-      // Start timer after 2 seconds
+      // Show "Get Ready" message for 2 seconds, then start timer
+      io.to(roomId).emit('showGetReady');
+      
       setTimeout(() => {
-        startTimer(roomId);
+        if (room && room.gameStarted) {
+          startTimer(roomId);
+        }
       }, 2000);
     }
   });
@@ -160,6 +159,11 @@ io.on('connection', (socket) => {
   socket.on('skipQuestion', (roomId) => {
     const room = gameRooms[roomId];
     if (room && socket.id === room.gameMaster) {
+      // Clear current timer if running
+      if (room.currentTimerInterval) {
+        clearInterval(room.currentTimerInterval);
+        room.timerActive = false;
+      }
       nextRound(roomId);
     }
   });
@@ -274,12 +278,18 @@ function startTimer(roomId) {
   if (!room) return;
   
   room.timerActive = true;
+  room.timerPaused = false;
   let timeLeft = 10;
   
   io.to(roomId).emit('timerStarted', { timeLeft: timeLeft });
   
   const timerInterval = setInterval(() => {
-    if (!room.timerPaused && room.timerActive) {
+    if (!room || !room.timerActive) {
+      clearInterval(timerInterval);
+      return;
+    }
+    
+    if (!room.timerPaused) {
       timeLeft--;
       io.to(roomId).emit('timerUpdate', { timeLeft: timeLeft });
       
@@ -290,6 +300,9 @@ function startTimer(roomId) {
       }
     }
   }, 1000);
+  
+  // Store interval reference for potential cleanup
+  room.currentTimerInterval = timerInterval;
 }
 
 function endRound(roomId) {
@@ -349,6 +362,12 @@ function nextRound(roomId) {
   const room = gameRooms[roomId];
   if (!room) return;
   
+  // Clear current timer if running
+  if (room.currentTimerInterval) {
+    clearInterval(room.currentTimerInterval);
+    room.timerActive = false;
+  }
+  
   // Reset answers
   room.answers = {};
   
@@ -373,9 +392,13 @@ function nextRound(roomId) {
     question: question
   });
   
-  // Start timer after 2 seconds
+  // Show "Get Ready" message for 2 seconds, then start timer
+  io.to(roomId).emit('showGetReady');
+  
   setTimeout(() => {
-    startTimer(roomId);
+    if (room && room.gameStarted) {
+      startTimer(roomId);
+    }
   }, 2000);
 }
 
