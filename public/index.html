@@ -7,59 +7,93 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="gaming-bg">
-    <div class="pixel-grid"></div>
+  
+  <!-- Floating Gaming Elements -->
+  <div class="floating-elements">
+    <div class="float-item" style="top: 10%; left: 5%;">🎮</div>
+    <div class="float-item" style="top: 20%; right: 8%;">🎯</div>
+    <div class="float-item" style="top: 40%; left: 3%;">⭐</div>
+    <div class="float-item" style="top: 60%; right: 5%;">🎲</div>
+    <div class="float-item" style="top: 80%; left: 10%;">🎪</div>
+    <div class="float-item" style="top: 70%; right: 12%;">🕹️</div>
   </div>
 
-  <div class="container">
+  <div class="wrapper">
     
-    <header class="header">
-      <img src="images/meenit-logo.png" alt="Meenit's Playzone" class="logo">
-      <p class="subtitle">Where Friends Play Together!</p>
+    <!-- Header Section -->
+    <header class="hero-section">
+      <div class="logo-container">
+        <img src="images/meenit-logo.png" alt="Meenit's Playzone" class="main-logo">
+      </div>
+      <h1 class="welcome-text">🎮 Choose Your Game 🎮</h1>
+      <p class="tagline">✨ Where Friends Play Together ✨</p>
     </header>
 
-    <main class="games">
+    <!-- Games Section -->
+    <main class="games-section">
       
-      <div class="game-card" onclick="launchGame('odd-one-in')">
-        <div class="card-bg card-bg-1"></div>
-        <img src="images/odd-one-in-logo.png" alt="Odd One In" class="game-img">
-        <div class="info">
-          <div class="tags">
-            <span class="tag">🕐 10s</span>
-            <span class="tag">👥 2-20</span>
+      <!-- Odd One In -->
+      <div class="game-box" onclick="launchGame('odd-one-in')">
+        <div class="game-glow glow-pink"></div>
+        <div class="game-content">
+          <img src="images/odd-one-in-logo.png" alt="Odd One In" class="game-image">
+          <div class="game-details">
+            <div class="badges">
+              <span class="badge badge-time">⏱️ 10 seconds</span>
+              <span class="badge badge-players">👥 2-20 players</span>
+            </div>
+            <button class="play-button pink-btn">
+              <span class="btn-text">PLAY NOW</span>
+              <span class="btn-arrow">→</span>
+            </button>
           </div>
-          <button class="btn btn-pink">PLAY NOW →</button>
         </div>
       </div>
 
-      <div class="game-card" onclick="launchGame('undercover')">
-        <div class="card-bg card-bg-2"></div>
-        <img src="images/undercover-logo.png" alt="Undercover" class="game-img">
-        <div class="info">
-          <div class="tags">
-            <span class="tag">🧠 Strategy</span>
-            <span class="tag">👥 4-12</span>
+      <!-- Undercover -->
+      <div class="game-box" onclick="launchGame('undercover')">
+        <div class="game-glow glow-cyan"></div>
+        <div class="game-content">
+          <img src="images/undercover-logo.png" alt="Undercover" class="game-image">
+          <div class="game-details">
+            <div class="badges">
+              <span class="badge badge-strategy">🧠 Strategy</span>
+              <span class="badge badge-players">👥 4-12 players</span>
+            </div>
+            <button class="play-button cyan-btn">
+              <span class="btn-text">PLAY NOW</span>
+              <span class="btn-arrow">→</span>
+            </button>
           </div>
-          <button class="btn btn-cyan">PLAY NOW →</button>
         </div>
       </div>
 
-      <div class="game-card" onclick="launchGame('mafia')">
-        <div class="card-bg card-bg-3"></div>
-        <img src="images/mafia-logo.png" alt="Mafia" class="game-img">
-        <div class="info">
-          <div class="tags">
-            <span class="tag">🎭 Deception</span>
-            <span class="tag">👥 5-15</span>
+      <!-- Mafia -->
+      <div class="game-box" onclick="launchGame('mafia')">
+        <div class="game-glow glow-gold"></div>
+        <div class="game-content">
+          <img src="images/mafia-logo.png" alt="Mafia" class="game-image">
+          <div class="game-details">
+            <div class="badges">
+              <span class="badge badge-deception">🎭 Deception</span>
+              <span class="badge badge-players">👥 5-15 players</span>
+            </div>
+            <button class="play-button gold-btn disabled-btn">
+              <span class="btn-text">COMING SOON</span>
+              <span class="btn-arrow">🔒</span>
+            </button>
           </div>
-          <button class="btn btn-gold btn-disabled">COMING SOON 🔒</button>
         </div>
       </div>
 
     </main>
 
-    <footer class="footer">
-      <span>Made with ❤️ by Meenit</span>
+    <!-- Footer -->
+    <footer class="footer-section">
+      <div class="footer-content">
+        <p class="footer-text">Made with ❤️ by Meenit</p>
+        <div class="footer-emojis">🎮 🎯 🕵️ 🌙 🎪 🎲 🕹️</div>
+      </div>
     </footer>
 
   </div>
