@@ -7,152 +7,75 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Main Playground Screen -->
-  <div id="playgroundScreen" class="screen active">
-    <div class="container">
-      <h1 class="title">🎪 MEENIT'S PLAYZONE 🎪</h1>
-      <div class="game-grid">
-        <div class="game-card" onclick="selectGame('oddOneIn')">
-          <div class="game-icon">🎯</div>
-          <h2>Odd One In</h2>
-          <p>Don't match anyone!</p>
-        </div>
-        <div class="game-card disabled">
-          <div class="game-icon">🎲</div>
-          <h2>Coming Soon</h2>
-          <p>Stay tuned!</p>
-        </div>
-        <div class="game-card disabled">
-          <div class="game-icon">🃏</div>
-          <h2>Coming Soon</h2>
-          <p>Stay tuned!</p>
-        </div>
+  <div class="playground-container">
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <div class="main-logo">
+        <div class="logo-icon">🎪</div>
+        <h1 class="logo-text">MEENIT'S PLAYZONE</h1>
+        <p class="logo-subtitle">Where Friends Play Together</p>
       </div>
     </div>
-  </div>
 
-  <!-- Name Entry Screen -->
-  <div id="nameEntryScreen" class="screen">
-    <div class="container">
-      <h1 class="title">🎯 ODD ONE IN</h1>
-      <div class="name-entry-box">
-        <h2>Enter Your Name</h2>
-        <input type="text" id="playerNameInput" placeholder="Your Name" maxlength="20">
-        <label>
-          <input type="checkbox" id="gameMasterCheck">
-          I'm the Game Master
-        </label>
-        <button onclick="joinGame()" class="btn-primary">Join Game</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lobby Screen -->
-  <div id="lobbyScreen" class="screen">
-    <div class="container">
-      <h1 class="title">🎯 ODD ONE IN - LOBBY</h1>
-      
-      <div class="invite-section" id="inviteSection" style="display: none;">
-        <h3>Invite Friends</h3>
-        <div class="invite-link-box">
-          <input type="text" id="inviteLink" readonly>
-          <button onclick="copyInviteLink()" class="btn-secondary">Copy Link</button>
+    <!-- Games Grid -->
+    <div class="games-section">
+      <h2 class="section-title">Choose Your Game</h2>
+      <div class="games-grid">
+        
+        <!-- Odd One In Game -->
+        <div class="game-card" onclick="launchGame('odd-one-in')">
+          <div class="game-card-inner">
+            <div class="game-logo">
+              <div class="game-emoji">🎯</div>
+              <h3>ODD ONE IN</h3>
+            </div>
+            <p class="game-description">Don't match anyone else's answer! Last unique player wins.</p>
+            <div class="game-stats">
+              <span class="stat">
+                <span class="stat-icon">👥</span>
+                <span>2-20 Players</span>
+              </span>
+              <span class="stat">
+                <span class="stat-icon">⏱️</span>
+                <span>10 sec rounds</span>
+              </span>
+            </div>
+            <button class="play-btn">PLAY NOW</button>
+          </div>
         </div>
-      </div>
 
-      <div class="players-section">
-        <h3>Players (<span id="playerCount">0</span>)</h3>
-        <div id="playerList" class="player-list"></div>
-      </div>
-
-      <div class="rules-section">
-        <h3>📜 GAME RULES</h3>
-        <ul class="rules-list">
-          <li>⏱️ You have <strong>10 seconds</strong> to answer each question</li>
-          <li>🚫 If you don't answer in time, you're <strong>ELIMINATED</strong></li>
-          <li>⚠️ If your answer matches anyone else's, <strong>EVERYONE</strong> with that answer is <strong>ELIMINATED</strong></li>
-          <li>✅ Only <strong>unique answers</strong> survive to the next round</li>
-          <li>❌ Wrong answers (not matching the question) = <strong>ELIMINATION</strong></li>
-          <li>🏆 Last person standing <strong>WINS!</strong></li>
-        </ul>
-      </div>
-
-      <button id="startGameBtn" onclick="startGame()" class="btn-primary" style="display: none;">
-        🎮 START GAME
-      </button>
-      <div id="waitingMessage" class="waiting-message">
-        ⏳ Waiting for Game Master to start...
-      </div>
-    </div>
-  </div>
-
-  <!-- Game Screen -->
-  <div id="gameScreen" class="screen">
-    <div class="container">
-      <div class="game-header">
-        <div class="game-info">
-          <span>Round: <strong id="roundNumber">1</strong></span>
-          <span>Active Players: <strong id="activePlayers">0</strong></span>
+        <!-- Coming Soon Cards -->
+        <div class="game-card coming-soon">
+          <div class="game-card-inner">
+            <div class="game-logo">
+              <div class="game-emoji">🎲</div>
+              <h3>GAME 2</h3>
+            </div>
+            <p class="game-description">Coming Soon...</p>
+            <div class="coming-soon-badge">UNDER DEVELOPMENT</div>
+          </div>
         </div>
-        <div class="timer-display">
-          ⏱️ <span id="timerDisplay">10</span>s
+
+        <div class="game-card coming-soon">
+          <div class="game-card-inner">
+            <div class="game-logo">
+              <div class="game-emoji">🃏</div>
+              <h3>GAME 3</h3>
+            </div>
+            <p class="game-description">Coming Soon...</p>
+            <div class="coming-soon-badge">UNDER DEVELOPMENT</div>
+          </div>
         </div>
-      </div>
 
-      <!-- Game Master Controls -->
-      <div id="gameMasterControls" class="gm-controls" style="display: none;">
-        <button onclick="pauseTimer()" class="btn-control">⏸️ Pause</button>
-        <button onclick="resumeTimer()" class="btn-control">▶️ Resume</button>
-        <button onclick="skipQuestion()" class="btn-control">⏭️ Skip</button>
-        <button onclick="editQuestion()" class="btn-control">✏️ Edit</button>
-        <button onclick="resetGame()" class="btn-control">🔄 Reset</button>
-      </div>
-
-      <div class="question-display">
-        <h2 id="currentQuestion">Waiting for question...</h2>
-      </div>
-
-      <div id="answerInputSection" class="answer-section">
-        <input type="text" id="answerInput" placeholder="Type your answer..." maxlength="50">
-        <button onclick="submitAnswer()" class="btn-primary">Submit Answer</button>
-        <div id="answerStatus" class="answer-status"></div>
-      </div>
-
-      <div id="answerReviewSection" class="answer-review" style="display: none;">
-        <h3>📊 ANSWERS SUBMITTED</h3>
-        <div id="answerGroups"></div>
-        <button id="nextRoundBtn" onclick="nextRound()" class="btn-primary" style="display: none;">
-          ▶️ NEXT ROUND
-        </button>
-      </div>
-
-      <div id="eliminatedMessage" class="eliminated-message" style="display: none;">
-        <h2>🚫 YOU'RE ELIMINATED!</h2>
-        <p>You can still watch the game continue...</p>
-        <p id="gmEliminatedNote" style="display: none;">But you're still the Game Master 👑</p>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="playground-footer">
+      <p>Made with ❤️ by Meenit</p>
+    </footer>
   </div>
 
-  <!-- Winner Screen -->
-  <div id="winnerScreen" class="screen">
-    <div class="container">
-      <h1 class="title">🏆 GAME OVER! 🏆</h1>
-      <div class="winner-display">
-        <h2 id="winnerName"></h2>
-      </div>
-      <div class="standings">
-        <h3>Final Standings</h3>
-        <div id="finalStandings"></div>
-      </div>
-      <div class="winner-actions">
-        <button onclick="playAgain()" class="btn-primary">🔄 PLAY AGAIN</button>
-        <button onclick="backToPlayground()" class="btn-secondary">🏠 BACK TO PLAYGROUND</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="game.js"></script>
+  <script src="playground.js"></script>
 </body>
 </html>
