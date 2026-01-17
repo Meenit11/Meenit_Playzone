@@ -1,66 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meenit's Playzone</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meenit's Playzone - Play with Friends!</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="animated-bg">
+    <div class="bg-circle circle1"></div>
+    <div class="bg-circle circle2"></div>
+    <div class="bg-circle circle3"></div>
+    <div class="bg-circle circle4"></div>
+  </div>
 
-  <!-- Background Effects -->
-  <div class="bg-glow pink"></div>
-  <div class="bg-glow blue"></div>
+  <div class="sparkles"></div>
 
-  <div class="app-container">
-
-    <!-- Header -->
+  <div class="main-wrapper">
+    
     <header class="header">
-      <img src="/images/meenit-logo.png" alt="Meenit's Playzone" class="main-logo" />
-      <p class="tagline">Where Friends Play Together 🎮</p>
+      <div class="logo-wrapper">
+        <img src="/images/meenit-logo.png" alt="Meenit's Playzone" class="main-logo">
+      </div>
+      <p class="tagline">✨ Where Friends Play Together ✨</p>
     </header>
 
-    <!-- Games -->
-    <section class="games">
-
-      <!-- Odd One In -->
-      <div class="game-card pink" onclick="launchGame('odd-one-in')">
-        <img src="/images/odd-one-in-logo.png" class="game-logo" />
-        <div class="meta">
-          <span>🕐 10 sec</span>
-          <span>👥 2–20</span>
+    <main class="games-container">
+      <div class="games-grid">
+        
+        <div class="game-card card-1" onclick="launchGame('odd-one-in')">
+          <div class="card-glow"></div>
+          <img src="/images/odd-one-in-logo.png" alt="Odd One In" class="game-img">
+          <div class="game-info">
+            <div class="game-badges">
+              <span class="badge">🕐 10 sec</span>
+              <span class="badge">👥 2-20</span>
+            </div>
+            <button class="game-btn btn-1">
+              <span>PLAY NOW</span>
+              <span class="btn-icon">→</span>
+            </button>
+          </div>
         </div>
-        <button>PLAY</button>
-      </div>
 
-      <!-- Undercover -->
-      <div class="game-card cyan" onclick="launchGame('undercover')">
-        <img src="/images/undercover-logo.png" class="game-logo" />
-        <div class="meta">
-          <span>🧠 Strategy</span>
-          <span>👥 4–12</span>
+        <div class="game-card card-2" onclick="launchGame('undercover')">
+          <div class="card-glow"></div>
+          <img src="/images/undercover-logo.png" alt="Undercover" class="game-img">
+          <div class="game-info">
+            <div class="game-badges">
+              <span class="badge">🧠 Strategy</span>
+              <span class="badge">👥 4-12</span>
+            </div>
+            <button class="game-btn btn-2">
+              <span>PLAY NOW</span>
+              <span class="btn-icon">→</span>
+            </button>
+          </div>
         </div>
-        <button>PLAY</button>
-      </div>
 
-      <!-- Mafia -->
-      <div class="game-card yellow">
-        <img src="/images/mafia-logo.png" class="game-logo" />
-        <div class="meta">
-          <span>🎭 Deception</span>
-          <span>👥 5–15</span>
+        <div class="game-card card-3" onclick="launchGame('mafia')">
+          <div class="card-glow"></div>
+          <img src="/images/mafia-logo.png" alt="Mafia" class="game-img">
+          <div class="game-info">
+            <div class="game-badges">
+              <span class="badge">🎭 Deception</span>
+              <span class="badge">👥 5-15</span>
+            </div>
+            <button class="game-btn btn-3 disabled">
+              <span>COMING SOON</span>
+              <span class="btn-icon">🔒</span>
+            </button>
+          </div>
         </div>
-        <button class="locked">COMING SOON</button>
+
       </div>
+    </main>
 
-    </section>
-
-    <!-- Footer -->
     <footer class="footer">
-      <p>Made with ❤️ by Meenit</p>
+      <p class="footer-text">Made with ❤️ by Meenit</p>
+      <div class="footer-icons">🎮 🎯 🕵️ 🌙 🎪</div>
     </footer>
 
   </div>
 
+  <script src="playground.js"></script>
 </body>
 </html>
