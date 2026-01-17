@@ -41,16 +41,19 @@ io.on('connection', (socket) => {
     // Check if player already exists
     const existingPlayer = room.players.find(p => p.id === socket.id);
     if (!existingPlayer) {
+      // Only allow Game Master if room is empty (first person)
+      const canBeGameMaster = isGameMaster && room.players.length === 0;
+      
       const player = {
         id: socket.id,
         name: playerName,
-        isGameMaster: isGameMaster,
+        isGameMaster: canBeGameMaster,
         eliminated: false
       };
       
       room.players.push(player);
       
-      if (isGameMaster) {
+      if (canBeGameMaster) {
         room.gameMaster = socket.id;
       }
     }
