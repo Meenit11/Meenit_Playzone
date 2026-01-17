@@ -16,6 +16,14 @@ function showScreen(screenId) {
 // Select game from playground
 function selectGame(gameId) {
   if (gameId === 'oddOneIn') {
+    // Generate new room and set as Game Master
+    currentRoomId = generateRoomId();
+    isGameMaster = true;
+    
+    // Update URL with room ID
+    window.history.pushState({}, '', `?room=${currentRoomId}`);
+    
+    // Show name entry
     showScreen('nameEntryScreen');
   }
 }
@@ -23,7 +31,6 @@ function selectGame(gameId) {
 // Join game
 function joinGame() {
   const nameInput = document.getElementById('playerNameInput');
-  const gmCheck = document.getElementById('gameMasterCheck');
   
   playerName = nameInput.value.trim();
   
@@ -32,16 +39,21 @@ function joinGame() {
     return;
   }
   
-  isGameMaster = gmCheck.checked;
-  
-  // Generate or get room ID from URL
+  // Check if joining via invite link or creating new game
   const urlParams = new URLSearchParams(window.location.search);
-  currentRoomId = urlParams.get('room') || generateRoomId();
+  const roomFromURL = urlParams.get('room');
   
-  // Update URL with room ID
-  if (!urlParams.get('room')) {
+  if (roomFromURL) {
+    // Joining existing game via invite link
+    currentRoomId = roomFromURL;
+    isGameMaster = false; // Players joining via link are never Game Master
+  } else if (!currentRoomId) {
+    // Shouldn't happen, but fallback
+    currentRoomId = generateRoomId();
+    isGameMaster = true;
     window.history.pushState({}, '', `?room=${currentRoomId}`);
   }
+  // else currentRoomId and isGameMaster already set by selectGame()
   
   socket.emit('joinGame', {
     roomId: currentRoomId,
@@ -469,6 +481,13 @@ function displayStandings(players) {
 document.addEventListener('DOMContentLoaded', () => {
   const nameInput = document.getElementById('playerNameInput');
   const answerInput = document.getElementById('answerInput');
+  
+  // Check if URL has room parameter (invite link)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('room')) {
+    // Player is joining via invite link - skip playground
+    showScreen('nameEntryScreen');
+  }
   
   if (nameInput) {
     nameInput.addEventListener('keypress', (e) => {
