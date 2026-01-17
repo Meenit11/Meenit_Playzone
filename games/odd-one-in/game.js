@@ -21,18 +21,25 @@ document.addEventListener('DOMContentLoaded', () => {
   currentRoomId = urlParams.get('room');
   const isGM = urlParams.get('gm') === 'true';
   
-  if (currentRoomId) {
-    isGameMaster = isGM;
-    showScreen('nameEntryScreen');
-  } else {
+  if (!currentRoomId) {
     alert('Invalid game link!');
     window.location.href = '/';
+    return;
   }
   
+  isGameMaster = isGM;
+  
+  // Always start at name entry screen
+  showScreen('nameEntryScreen');
+  
   // Enter key listeners
-  document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') joinGame();
-  });
+  const nameInput = document.getElementById('playerNameInput');
+  if (nameInput) {
+    nameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') joinGame();
+    });
+    nameInput.focus();
+  }
   
   const answerInput = document.getElementById('answerInput');
   if (answerInput) {
