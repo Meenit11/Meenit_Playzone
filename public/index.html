@@ -8,99 +8,59 @@
 </head>
 <body>
   
-  <!-- Floating Gaming Elements -->
-  <div class="floating-elements">
-    <div class="float-item" style="top: 10%; left: 5%;">🎮</div>
-    <div class="float-item" style="top: 20%; right: 8%;">🎯</div>
-    <div class="float-item" style="top: 40%; left: 3%;">⭐</div>
-    <div class="float-item" style="top: 60%; right: 5%;">🎲</div>
-    <div class="float-item" style="top: 80%; left: 10%;">🎪</div>
-    <div class="float-item" style="top: 70%; right: 12%;">🕹️</div>
-  </div>
-
-  <div class="wrapper">
+  <div class="container">
     
     <!-- Logo Section -->
-    <header class="header-section">
-      <div class="logo-container">
-        <img src="images/meenit-logo.png" alt="Meenit's Playzone" class="main-logo">
-      </div>
+    <header class="header">
+      <img src="images/meenit-logo.png" alt="Meenit's Playzone" class="logo">
+      <h1 class="tagline">Welcome — the boredom you knew is gone.</h1>
     </header>
 
-    <!-- Tagline Section -->
-    <section class="tagline-section">
-      <h1 class="tagline-text">Welcome — the boredom you knew is gone.</h1>
+    <!-- Choose Your Game Title -->
+    <section class="game-title-section">
+      <h2 class="choose-game">Choose Your Game</h2>
     </section>
 
-    <!-- Choose Game Title -->
-    <section class="choose-section">
-      <h2 class="choose-title">🎮 Choose Your Game 🎮</h2>
-    </section>
-
-    <!-- Games Section -->
-    <main class="games-section">
+    <!-- Games Grid -->
+    <main class="games-grid">
       
       <!-- Odd One In -->
       <div class="game-card" onclick="launchGame('odd-one-in')">
-        <div class="game-image-wrapper">
-          <img src="images/odd-one-in-logo.png" alt="Odd One In" class="game-logo">
-        </div>
+        <img src="images/odd-one-in-logo.png" alt="Odd One In" class="game-logo">
         <div class="game-info">
-          <div class="info-row">
-            <span class="info-item">⏱️ 10 seconds</span>
-          </div>
-          <div class="info-row">
-            <span class="info-item">👥 3-Infinite players</span>
-          </div>
-          <button class="play-btn btn-pink">
-            <span>PLAY NOW</span>
-            <span class="arrow">→</span>
-          </button>
+          <p class="game-desc">⏱️ 10 seconds</p>
+          <p class="game-desc">🎯 Strategy</p>
+          <p class="game-desc">👥 3 - ∞ players</p>
         </div>
+        <button class="play-btn btn-pink">PLAY NOW</button>
       </div>
 
       <!-- Undercover -->
       <div class="game-card" onclick="launchGame('undercover')">
-        <div class="game-image-wrapper">
-          <img src="images/undercover-logo.png" alt="Undercover" class="game-logo">
-        </div>
+        <img src="images/undercover-logo.png" alt="Undercover" class="game-logo">
         <div class="game-info">
-          <div class="info-row">
-            <span class="info-item">🧠 Strategy</span>
-          </div>
-          <div class="info-row">
-            <span class="info-item">👥 4-Infinite players</span>
-          </div>
-          <button class="play-btn btn-cyan">
-            <span>PLAY NOW</span>
-            <span class="arrow">→</span>
-          </button>
+          <p class="game-desc">🧠 Strategy</p>
+          <p class="game-desc">🎭 Deception</p>
+          <p class="game-desc">👥 4 - ∞ players</p>
         </div>
+        <button class="play-btn btn-cyan">PLAY NOW</button>
       </div>
 
       <!-- Mafia -->
       <div class="game-card" onclick="launchGame('mafia')">
-        <div class="game-image-wrapper">
-          <img src="images/mafia-logo.png" alt="Mafia" class="game-logo">
-        </div>
+        <img src="images/mafia-logo.png" alt="Mafia" class="game-logo">
         <div class="game-info">
-          <div class="info-row">
-            <span class="info-item">🎭 Deception</span>
-          </div>
-          <div class="info-row">
-            <span class="info-item">👥 5-Infinite players</span>
-          </div>
-          <button class="play-btn btn-gold btn-disabled">
-            <span>COMING SOON</span>
-            <span class="arrow">🔒</span>
-          </button>
+          <p class="game-desc">🌙 Night & Day</p>
+          <p class="game-desc">🎭 Deception</p>
+          <p class="game-desc">👥 5 - ∞ players</p>
         </div>
+        <button class="play-btn btn-gold btn-disabled">COMING SOON</button>
       </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="footer-section">
+    <footer class="footer">
       <p class="footer-text">Made with ❤️ by Meenit Doshi</p>
     </footer>
 
