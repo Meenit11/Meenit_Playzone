@@ -116,7 +116,7 @@ body {
 
 .main-logo {
   width: 100%;
-  max-width: 450px;
+  max-width: 600px;
   height: auto;
   filter: drop-shadow(0 15px 40px rgba(255, 140, 66, 0.5));
   transition: transform 0.3s;
@@ -159,8 +159,8 @@ body {
 /* Games Section */
 .games-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 50px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 35px;
   margin-bottom: 80px;
   padding: 0 20px;
 }
@@ -168,15 +168,15 @@ body {
 /* Game Box */
 .game-box {
   background: #fff;
-  border-radius: 35px;
-  padding: 30px;
+  border-radius: 30px;
+  padding: 20px;
   position: relative;
   cursor: pointer;
   overflow: hidden;
   transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: 
-    0 20px 50px rgba(0,0,0,0.15),
-    0 0 0 8px rgba(255,255,255,0.5);
+    0 15px 40px rgba(0,0,0,0.15),
+    0 0 0 6px rgba(255,255,255,0.5);
   animation: slideUp 0.8s ease-out backwards;
 }
 
@@ -223,10 +223,10 @@ body {
 }
 
 .game-box:hover {
-  transform: translateY(-25px) scale(1.03);
+  transform: translateY(-20px) scale(1.02);
   box-shadow: 
-    0 30px 70px rgba(0,0,0,0.25),
-    0 0 0 8px rgba(255,255,255,0.8);
+    0 25px 60px rgba(0,0,0,0.25),
+    0 0 0 6px rgba(255,255,255,0.8);
 }
 
 .game-glow {
@@ -266,11 +266,11 @@ body {
 
 .game-image {
   width: 100%;
-  max-width: 420px;
+  max-width: 300px;
   height: auto;
-  margin: 0 auto 25px;
+  margin: 0 auto 18px;
   display: block;
-  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.2));
   transition: transform 0.4s ease;
 }
 
@@ -283,7 +283,7 @@ body {
 .game-details {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
 }
 
 .badges {
@@ -295,13 +295,13 @@ body {
 
 .badge {
   background: linear-gradient(135deg, #FFF5E6, #FFE8CC);
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-size: 0.95rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #FF6B35;
   border: 3px solid #FFD93D;
-  box-shadow: 0 5px 15px rgba(255,140,66,0.2);
+  box-shadow: 0 4px 12px rgba(255,140,66,0.2);
   transition: all 0.3s;
 }
 
@@ -313,11 +313,11 @@ body {
 /* Play Buttons */
 .play-button {
   width: 100%;
-  padding: 18px 30px;
-  font-size: 1.2rem;
+  padding: 15px 25px;
+  font-size: 1.05rem;
   font-weight: 800;
   border: none;
-  border-radius: 20px;
+  border-radius: 18px;
   color: white;
   cursor: pointer;
   font-family: 'Fredoka', sans-serif;
@@ -326,11 +326,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
 .play-button::before {
@@ -362,8 +362,8 @@ body {
 }
 
 .pink-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 35px rgba(255,107,53,0.5);
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(255,107,53,0.5);
 }
 
 .cyan-btn {
@@ -371,8 +371,8 @@ body {
 }
 
 .cyan-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 35px rgba(78,205,196,0.5);
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(78,205,196,0.5);
 }
 
 .gold-btn {
@@ -380,8 +380,8 @@ body {
 }
 
 .gold-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 12px 35px rgba(255,217,61,0.5);
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(255,217,61,0.5);
 }
 
 .disabled-btn {
@@ -391,7 +391,7 @@ body {
 
 .disabled-btn:hover {
   transform: none;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
 .disabled-btn::before {
@@ -399,7 +399,7 @@ body {
 }
 
 .btn-arrow {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   transition: transform 0.3s;
 }
 
@@ -471,7 +471,7 @@ body {
   }
 
   .main-logo {
-    max-width: 300px;
+    max-width: 400px;
   }
 
   .games-section {
@@ -481,7 +481,7 @@ body {
   }
 
   .game-box {
-    padding: 25px;
+    padding: 18px;
   }
 
   .footer-emojis {
