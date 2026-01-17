@@ -3,16 +3,28 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
+// Serve static files
 app.use(express.static('public'));
+app.use('/games', express.static('games'));
+
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/odd-one-in', (req, res) => {
+  res.sendFile(path.join(__dirname, 'games', 'odd-one-in', 'game.html'));
+});
 
 // Game state
 let gameRooms = {};
 
-// Load questions
-let questions = JSON.parse(fs.readFileSync('questions.json', 'utf8'));
+// Load questions for Odd One In
+let oddOneInQuestions = JSON.parse(fs.readFileSync(path.join(__dirname, 'games', 'odd-one-in', 'questions.json'), 'utf8'));
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -25,14 +37,13 @@ io.on('connection', (socket) => {
       gameRooms[roomId] = {
         players: [],
         gameMaster: null,
-        moderator: null,
         gameStarted: false,
         currentRound: 0,
         currentQuestion: null,
         answers: {},
-        eliminated: [],
         timerActive: false,
-        timerPaused: false
+        timerPaused: false,
+        currentTimerInterval: null
       };
     }
 
@@ -41,7 +52,7 @@ io.on('connection', (socket) => {
     // Check if player already exists
     const existingPlayer = room.players.find(p => p.id === socket.id);
     if (!existingPlayer) {
-      // Only allow Game Master if room is empty (first person)
+      // Only first person in empty room becomes Game Master
       const canBeGameMaster = isGameMaster && room.players.length === 0;
       
       const player = {
@@ -61,13 +72,11 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
     
-    // Send updated player list to everyone
     io.to(roomId).emit('playerListUpdate', {
       players: room.players,
       gameMaster: room.gameMaster
     });
     
-    // Send room state to the joining player
     socket.emit('roomJoined', {
       roomId: roomId,
       isGameMaster: socket.id === room.gameMaster,
@@ -82,8 +91,6 @@ io.on('connection', (socket) => {
     
     if (room && socket.id === room.gameMaster) {
       room.players = room.players.filter(p => p.id !== playerId);
-      
-      // Disconnect the removed player
       io.to(playerId).emit('removedFromGame');
       
       io.to(roomId).emit('playerListUpdate', {
@@ -97,11 +104,10 @@ io.on('connection', (socket) => {
   socket.on('startGame', (roomId) => {
     const room = gameRooms[roomId];
     
-    if (room && socket.id === room.gameMaster) {
+    if (room && socket.id === room.gameMaster && !room.gameStarted) {
       room.gameStarted = true;
       room.currentRound = 1;
       
-      // Select appropriate question based on player count
       const activePlayers = room.players.filter(p => !p.eliminated).length;
       const question = selectQuestion(activePlayers);
       room.currentQuestion = question;
@@ -110,9 +116,6 @@ io.on('connection', (socket) => {
         round: room.currentRound,
         question: question
       });
-      
-      // Show "Get Ready" message for 2 seconds, then start timer
-      io.to(roomId).emit('showGetReady');
       
       setTimeout(() => {
         if (room && room.gameStarted) {
@@ -127,16 +130,15 @@ io.on('connection', (socket) => {
     const { roomId, answer } = data;
     const room = gameRooms[roomId];
     
-    if (room && room.timerActive) {
+    if (room && room.timerActive && !room.timerPaused) {
       const player = room.players.find(p => p.id === socket.id);
-      if (player && !player.eliminated) {
+      if (player && !player.eliminated && !room.answers[socket.id]) {
         room.answers[socket.id] = {
           playerName: player.name,
           answer: answer.trim(),
           playerId: socket.id
         };
         
-        // Notify player their answer was submitted
         socket.emit('answerSubmitted', { answer: answer });
       }
     }
@@ -162,7 +164,6 @@ io.on('connection', (socket) => {
   socket.on('skipQuestion', (roomId) => {
     const room = gameRooms[roomId];
     if (room && socket.id === room.gameMaster) {
-      // Clear current timer if running
       if (room.currentTimerInterval) {
         clearInterval(room.currentTimerInterval);
         room.timerActive = false;
@@ -192,21 +193,10 @@ io.on('connection', (socket) => {
           playerId: playerId,
           playerName: player.name
         });
-      }
-    }
-  });
-
-  socket.on('savePlayer', (data) => {
-    const { roomId, playerId } = data;
-    const room = gameRooms[roomId];
-    
-    if (room && socket.id === room.gameMaster) {
-      const player = room.players.find(p => p.id === playerId);
-      if (player) {
-        player.saved = true;
-        io.to(roomId).emit('playerSaved', {
-          playerId: playerId,
-          playerName: player.name
+        
+        io.to(roomId).emit('playerListUpdate', {
+          players: room.players,
+          gameMaster: room.gameMaster
         });
       }
     }
@@ -222,15 +212,18 @@ io.on('connection', (socket) => {
   socket.on('resetGame', (roomId) => {
     const room = gameRooms[roomId];
     if (room && socket.id === room.gameMaster) {
-      // Reset all players
+      if (room.currentTimerInterval) {
+        clearInterval(room.currentTimerInterval);
+      }
+      
       room.players.forEach(p => {
         p.eliminated = false;
-        p.saved = false;
       });
       room.currentRound = 0;
       room.gameStarted = false;
       room.answers = {};
       room.timerActive = false;
+      room.timerPaused = false;
       
       io.to(roomId).emit('gameReset');
     }
@@ -239,13 +232,11 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     
-    // Remove player from room
     if (socket.roomId) {
       const room = gameRooms[socket.roomId];
       if (room) {
         room.players = room.players.filter(p => p.id !== socket.id);
         
-        // If game master left, assign new one
         if (socket.id === room.gameMaster && room.players.length > 0) {
           room.gameMaster = room.players[0].id;
           room.players[0].isGameMaster = true;
@@ -255,6 +246,10 @@ io.on('connection', (socket) => {
           players: room.players,
           gameMaster: room.gameMaster
         });
+        
+        if (room.players.length === 0) {
+          delete gameRooms[socket.roomId];
+        }
       }
     }
   });
@@ -264,13 +259,13 @@ io.on('connection', (socket) => {
 function selectQuestion(playerCount) {
   let tier;
   if (playerCount >= 10) {
-    tier = questions.tier1_broad.questions;
+    tier = oddOneInQuestions.tier1_broad.questions;
   } else if (playerCount >= 5) {
-    tier = questions.tier2_medium.questions;
+    tier = oddOneInQuestions.tier2_medium.questions;
   } else if (playerCount >= 3) {
-    tier = questions.tier3_narrow.questions;
+    tier = oddOneInQuestions.tier3_narrow.questions;
   } else {
-    tier = questions.tier4_final.questions;
+    tier = oddOneInQuestions.tier4_final.questions;
   }
   
   return tier[Math.floor(Math.random() * tier.length)];
@@ -280,15 +275,19 @@ function startTimer(roomId) {
   const room = gameRooms[roomId];
   if (!room) return;
   
+  if (room.currentTimerInterval) {
+    clearInterval(room.currentTimerInterval);
+  }
+  
   room.timerActive = true;
   room.timerPaused = false;
   let timeLeft = 10;
   
   io.to(roomId).emit('timerStarted', { timeLeft: timeLeft });
   
-  const timerInterval = setInterval(() => {
+  room.currentTimerInterval = setInterval(() => {
     if (!room || !room.timerActive) {
-      clearInterval(timerInterval);
+      clearInterval(room.currentTimerInterval);
       return;
     }
     
@@ -297,61 +296,59 @@ function startTimer(roomId) {
       io.to(roomId).emit('timerUpdate', { timeLeft: timeLeft });
       
       if (timeLeft <= 0) {
-        clearInterval(timerInterval);
+        clearInterval(room.currentTimerInterval);
         room.timerActive = false;
         endRound(roomId);
       }
     }
   }, 1000);
-  
-  // Store interval reference for potential cleanup
-  room.currentTimerInterval = timerInterval;
 }
 
 function endRound(roomId) {
   const room = gameRooms[roomId];
   if (!room) return;
   
-  // Eliminate players who didn't answer
   room.players.forEach(player => {
     if (!player.eliminated && !room.answers[player.id]) {
       player.eliminated = true;
     }
   });
   
-  // Group answers
   const answerGroups = groupAnswers(room.answers);
   
   io.to(roomId).emit('roundEnded', {
     answers: room.answers,
     answerGroups: answerGroups
   });
+  
+  io.to(roomId).emit('playerListUpdate', {
+    players: room.players,
+    gameMaster: room.gameMaster
+  });
 }
 
 function groupAnswers(answers) {
   const groups = {
     duplicates: [],
-    similar: [],
     unique: []
   };
   
   const answerMap = {};
   
-  // Group by exact match (case-insensitive)
   Object.values(answers).forEach(ans => {
-    const key = ans.answer.toLowerCase();
+    const key = ans.answer.toLowerCase().trim();
     if (!answerMap[key]) {
       answerMap[key] = [];
     }
     answerMap[key].push(ans);
   });
   
-  // Categorize
   Object.entries(answerMap).forEach(([key, players]) => {
     if (players.length > 1) {
       groups.duplicates.push({
         answer: key,
-        players: players
+        players: players,
+        count: players.length
       });
     } else {
       groups.unique.push(players[0]);
@@ -365,16 +362,13 @@ function nextRound(roomId) {
   const room = gameRooms[roomId];
   if (!room) return;
   
-  // Clear current timer if running
   if (room.currentTimerInterval) {
     clearInterval(room.currentTimerInterval);
     room.timerActive = false;
   }
   
-  // Reset answers
   room.answers = {};
   
-  // Check for winner
   const activePlayers = room.players.filter(p => !p.eliminated);
   
   if (activePlayers.length <= 1) {
@@ -385,7 +379,6 @@ function nextRound(roomId) {
     return;
   }
   
-  // Start next round
   room.currentRound++;
   const question = selectQuestion(activePlayers.length);
   room.currentQuestion = question;
@@ -395,9 +388,6 @@ function nextRound(roomId) {
     question: question
   });
   
-  // Show "Get Ready" message for 2 seconds, then start timer
-  io.to(roomId).emit('showGetReady');
-  
   setTimeout(() => {
     if (room && room.gameStarted) {
       startTimer(roomId);
@@ -406,5 +396,5 @@ function nextRound(roomId) {
 }
 
 http.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🎪 Meenit's Playzone running on port ${PORT}`);
 });
