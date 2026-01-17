@@ -3,77 +3,94 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meenit's Playzone</title>
+  <title>Meenit's Playzone - Play with Friends!</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="stars"></div>
   <div class="playground-container">
-    <!-- Logo Section -->
-    <div class="logo-section">
-      <div class="main-logo">
-        <div class="logo-icon">🎪</div>
-        <h1 class="logo-text">MEENIT'S PLAYZONE</h1>
-        <p class="logo-subtitle">Where Friends Play Together</p>
+    
+    <!-- Header with Logo -->
+    <header class="main-header">
+      <div class="logo-container">
+        <div class="logo-circle">
+          <div class="avatar">👨‍💼</div>
+        </div>
+        <div class="logo-text">
+          <h1>Meenit's</h1>
+          <h2>Playzone</h2>
+        </div>
       </div>
-    </div>
+      <p class="tagline">✨ Where Friends Play Together ✨</p>
+    </header>
 
     <!-- Games Grid -->
-    <div class="games-section">
-      <h2 class="section-title">Choose Your Game</h2>
+    <main class="games-section">
+      <h2 class="section-title">🎮 Choose Your Adventure</h2>
+      
       <div class="games-grid">
         
-        <!-- Odd One In Game -->
-        <div class="game-card" onclick="launchGame('odd-one-in')">
-          <div class="game-card-inner">
-            <div class="game-logo">
-              <div class="game-emoji">🎯</div>
-              <h3>ODD ONE IN</h3>
-            </div>
-            <p class="game-description">Don't match anyone else's answer! Last unique player wins.</p>
-            <div class="game-stats">
-              <span class="stat">
-                <span class="stat-icon">👥</span>
-                <span>2-20 Players</span>
-              </span>
-              <span class="stat">
-                <span class="stat-icon">⏱️</span>
-                <span>10 sec rounds</span>
-              </span>
-            </div>
-            <button class="play-btn">PLAY NOW</button>
+        <!-- Odd One In -->
+        <div class="game-card" onclick="launchGame('odd-one-in')" style="--card-color: #FF6B9D">
+          <div class="card-shine"></div>
+          <div class="game-icon">🎯</div>
+          <h3 class="game-title">Odd One In</h3>
+          <p class="game-desc">Be unique! Don't match anyone's answer.</p>
+          <div class="game-tags">
+            <span class="tag">🕐 10 sec</span>
+            <span class="tag">👥 2-20</span>
           </div>
+          <button class="play-btn">
+            <span>PLAY NOW</span>
+            <span class="arrow">→</span>
+          </button>
         </div>
 
-        <!-- Coming Soon Cards -->
-        <div class="game-card coming-soon">
-          <div class="game-card-inner">
-            <div class="game-logo">
-              <div class="game-emoji">🎲</div>
-              <h3>GAME 2</h3>
-            </div>
-            <p class="game-description">Coming Soon...</p>
-            <div class="coming-soon-badge">UNDER DEVELOPMENT</div>
+        <!-- Undercover -->
+        <div class="game-card" onclick="launchGame('undercover')" style="--card-color: #4ECDC4">
+          <div class="card-shine"></div>
+          <div class="game-icon">🕵️</div>
+          <h3 class="game-title">Undercover</h3>
+          <p class="game-desc">Find the spy! Who's lying?</p>
+          <div class="game-tags">
+            <span class="tag">🧠 Strategy</span>
+            <span class="tag">👥 4-12</span>
           </div>
+          <button class="play-btn">
+            <span>PLAY NOW</span>
+            <span class="arrow">→</span>
+          </button>
         </div>
 
-        <div class="game-card coming-soon">
-          <div class="game-card-inner">
-            <div class="game-logo">
-              <div class="game-emoji">🃏</div>
-              <h3>GAME 3</h3>
-            </div>
-            <p class="game-description">Coming Soon...</p>
-            <div class="coming-soon-badge">UNDER DEVELOPMENT</div>
+        <!-- Mafia -->
+        <div class="game-card" onclick="launchGame('mafia')" style="--card-color: #FFE66D">
+          <div class="card-shine"></div>
+          <div class="game-icon">🌙</div>
+          <h3 class="game-title">Mafia</h3>
+          <p class="game-desc">Classic social deduction. Who's mafia?</p>
+          <div class="game-tags">
+            <span class="tag">🎭 Deception</span>
+            <span class="tag">👥 5-15</span>
           </div>
+          <button class="play-btn">
+            <span>COMING SOON</span>
+            <span class="arrow">🔒</span>
+          </button>
         </div>
 
       </div>
-    </div>
+    </main>
 
     <!-- Footer -->
-    <footer class="playground-footer">
-      <p>Made with ❤️ by Meenit</p>
+    <footer class="main-footer">
+      <div class="footer-content">
+        <p>Made with ❤️ by Meenit</p>
+        <div class="game-icons-footer">
+          🎮 🎯 🕵️ 🌙 🎪
+        </div>
+      </div>
     </footer>
+
   </div>
 
   <script src="playground.js"></script>
