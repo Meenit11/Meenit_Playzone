@@ -24,8 +24,24 @@ app.get('/odd-one-in', (req, res) => {
 let gameRooms = {};
 
 // Load questions for Odd One In
-let oddOneInQuestions = JSON.parse(fs.readFileSync(path.join(__dirname, 'games', 'odd-one-in', 'questions.json'), 'utf8'));
+// Load questions for Odd One In
+const questionsPath = path.join(__dirname, 'games', 'odd-one-in', 'questions.json');
 
+let oddOneInQuestions;
+try {
+    const data = fs.readFileSync(questionsPath, 'utf8');
+    oddOneInQuestions = JSON.parse(data);
+    console.log("✅ Questions loaded successfully!");
+} catch (err) {
+    console.error("❌ ERROR: Could not find questions.json at:", questionsPath);
+    // Fallback object so the server doesn't crash if the file is missing
+    oddOneInQuestions = {
+        tier1_broad: { questions: ["Generic Question"] },
+        tier2_medium: { questions: ["Medium Question"] },
+        tier3_narrow: { questions: ["Narrow Question"] },
+        tier4_final: { questions: ["Final Question"] }
+    };
+}
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
