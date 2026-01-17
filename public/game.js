@@ -225,14 +225,30 @@ socket.on('gameStarted', (data) => {
   
   // Reset answer section
   document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').disabled = false;
+  document.getElementById('answerInput').disabled = true; // Disabled until timer starts
   document.getElementById('answerStatus').textContent = '';
   document.getElementById('answerReviewSection').style.display = 'none';
   document.getElementById('eliminatedMessage').style.display = 'none';
   document.getElementById('answerInputSection').style.display = 'block';
+  
+  // Show "Get Ready" state
+  document.getElementById('timerDisplay').textContent = 'Ready...';
+});
+
+socket.on('showGetReady', () => {
+  document.getElementById('timerDisplay').textContent = 'Get Ready...';
+  document.getElementById('answerInput').disabled = true;
 });
 
 socket.on('timerStarted', (data) => {
+  // Enable input when timer actually starts
+  const answerInput = document.getElementById('answerInput');
+  const eliminatedMsg = document.getElementById('eliminatedMessage');
+  
+  if (eliminatedMsg.style.display === 'none') {
+    answerInput.disabled = false;
+  }
+  
   updateTimer(data.timeLeft);
 });
 
@@ -291,7 +307,7 @@ socket.on('nextRound', (data) => {
   
   // Reset answer section
   document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').disabled = false;
+  document.getElementById('answerInput').disabled = true; // Disabled until timer starts
   document.getElementById('answerStatus').textContent = '';
   document.getElementById('answerReviewSection').style.display = 'none';
   
@@ -300,6 +316,9 @@ socket.on('nextRound', (data) => {
   if (eliminatedMsg.style.display === 'none') {
     document.getElementById('answerInputSection').style.display = 'block';
   }
+  
+  // Show "Get Ready" state
+  document.getElementById('timerDisplay').textContent = 'Get Ready...';
 });
 
 socket.on('gameEnded', (data) => {
