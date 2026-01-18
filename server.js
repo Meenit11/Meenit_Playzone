@@ -11,9 +11,22 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 
-// Serve static files
-app.use(express.static('public'));
-app.use('/games', express.static('games'));
+// Serve static files with proper MIME types
+app.use(express.static('public', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
+
+app.use('/games', express.static('games', {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 
 // Routes
 app.get('/', (req, res) => {
