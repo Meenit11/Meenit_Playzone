@@ -21,60 +21,41 @@ body {
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
-  padding: 20px 15px;
+  /* Reduced top padding to move logo up */
+  padding: 5px 15px 20px 15px; 
   overflow-x: hidden;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.container {
-  max-width: 500px;
-  margin: 0 auto;
 }
 
 /* Header Section */
 .header {
   text-align: center;
   margin-bottom: 25px;
-  padding-top: 10px;
+  padding-top: 0; /* Removed extra padding */
 }
 
 .logo {
   width: 100%;
   max-width: 380px;
   height: auto;
+  margin-top: 0; /* Ensure no top margin */
   margin-bottom: 12px;
   filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
   animation: logoFloat 3s ease-in-out infinite;
-}
-
-@keyframes logoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
 }
 
 .tagline {
   font-family: 'Chewy', cursive;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #FFB6C1, #FFD700, #87CEEB, #FF69B4);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: textGradient 5s ease infinite;
+  /* Removed Gradient Background & Animations */
+  color: #FFFFFF; 
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: initial;
+  background-clip: initial;
+  animation: none;
   line-height: 1.5;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
   padding: 0 15px;
-}
-
-@keyframes textGradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 
 /* Choose Your Game Section */
