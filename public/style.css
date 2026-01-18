@@ -17,7 +17,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 15px 40px 15px;
+  padding: 0 15px 40px;
   overflow-x: hidden;
 }
 
@@ -29,27 +29,20 @@ body {
   align-items: center;
 }
 
-/* --- Header & Logo --- */
+/* ---------- HEADER ---------- */
 .header {
   width: 100%;
   text-align: center;
-  margin-bottom: 0;
-  padding-top: 0;
 }
 
-/* 🔹 MAIN LOGO – slightly smaller */
 .logo {
-  display: block;
   width: 100%;
-  max-width: 330px; /* ⬅ reduced from 380px */
-  height: auto;
+  max-width: 330px;
   margin: 0 auto;
 }
 
-/* --- Choose Your Game --- */
+/* ---------- TITLE ---------- */
 .game-title-section {
-  width: 100%;
-  text-align: center;
   margin: 25px 0;
 }
 
@@ -65,158 +58,165 @@ body {
      5px  5px 15px rgba(0,0,0,0.1);
 }
 
-/* --- Games Grid --- */
+/* ---------- GRID ---------- */
 .games-grid {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 20px;
+  gap: 22px;
   margin-bottom: 30px;
 }
 
-/* --- Gradient Animation Keyframes --- */
-@keyframes smoothGradient {
+/* ---------- KEYFRAMES ---------- */
+@keyframes bgMove {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* --- Game Cards --- */
+@keyframes floatCard {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0% { box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+  50% { box-shadow: 0 20px 45px rgba(0,0,0,0.25); }
+  100% { box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+}
+
+@keyframes shimmer {
+  0% { left: -120%; }
+  100% { left: 120%; }
+}
+
+@keyframes buttonBreath {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- GAME CARD ---------- */
 .game-card {
   width: 100%;
   border-radius: 25px;
   padding: 18px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.12);
-  cursor: pointer;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 
-  /* 🔹 Animation */
   background-size: 300% 300%;
-  animation: smoothGradient 5s ease-in-out infinite;
+  animation:
+    bgMove 5s ease-in-out infinite,
+    floatCard 4s ease-in-out infinite,
+    glowPulse 3.5s ease-in-out infinite;
 }
 
-/* 🔹 Animated Gradients */
-.card-pink {
-  background-image: linear-gradient(
-    135deg,
-    #FF9AA2,
-    #FFB6C1,
-    #FFF0F5,
-    #FFB6C1
+/* ✨ SHIMMER LAYER */
+.game-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.35),
+    transparent
   );
+  animation: shimmer 3.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+/* ---------- CARD COLORS ---------- */
+.card-pink {
+  background-image: linear-gradient(135deg, #FF9AA2, #FFB6C1, #FFF0F5, #FFB6C1);
 }
 
 .card-cyan {
-  background-image: linear-gradient(
-    135deg,
-    #48DBFB,
-    #1DD1A1,
-    #E0F7FA,
-    #54A0FF
-  );
+  background-image: linear-gradient(135deg, #48DBFB, #1DD1A1, #E0F7FA, #54A0FF);
 }
 
 .card-orange {
-  background-image: linear-gradient(
-    135deg,
-    #FFB347,
-    #FFD194,
-    #FFF5E6,
-    #FF9F43
-  );
+  background-image: linear-gradient(135deg, #FFB347, #FFD194, #FFF5E6, #FF9F43);
 }
 
+/* ---------- CARD CONTENT ---------- */
 .card-header {
   text-align: center;
   margin-bottom: 12px;
-}
-
-.game-logo {
-  width: 100%;
-  max-width: 180px;
-  height: auto;
   position: relative;
   z-index: 2;
 }
 
-/* --- Info Box --- */
+.game-logo {
+  max-width: 180px;
+  width: 100%;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.25));
+}
+
+/* ---------- INFO BOX ---------- */
 .card-body {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   gap: 10px;
   margin-bottom: 12px;
+  position: relative;
+  z-index: 2;
 }
 
 .info-box {
   flex: 1;
-  padding: 10px 12px;
+  padding: 10px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.88);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255,255,255,0.5);
-
+  border: 2px solid rgba(255,255,255,0.6);
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 8px;
+  align-items: center;
 }
 
 .info-box p {
   font-size: 0.95rem;
   font-weight: 700;
   color: #2c3e50;
-  white-space: nowrap;
 }
 
-/* --- Play Button --- */
+/* ---------- BUTTON ---------- */
 .play-btn {
   width: 100%;
-  padding: 14px 20px;
+  padding: 14px;
+  border-radius: 15px;
   font-size: 1.05rem;
   font-weight: 800;
   border: none;
-  border-radius: 15px;
   color: white;
-  background: linear-gradient(135deg, #f093fb, #f5576c);
-  font-family: 'Fredoka', sans-serif;
-  text-transform: uppercase;
   letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #f093fb, #f5576c);
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  animation: buttonBreath 2.8s ease-in-out infinite;
   position: relative;
   z-index: 2;
 }
 
 .btn-disabled {
   background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-  cursor: not-allowed;
+  animation: none;
 }
 
-/* --- Footer --- */
-.footer {
-  text-align: center;
-  padding: 20px 0;
-}
-
+/* ---------- FOOTER ---------- */
 .footer p {
-  font-size: 1rem;
   font-weight: 700;
-  color: #555;
   background: rgba(255,255,255,0.6);
   padding: 12px 25px;
   border-radius: 30px;
-  display: inline-block;
-  border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* --- Responsive --- */
+/* ---------- RESPONSIVE ---------- */
 @media (min-width: 768px) {
   .container { max-width: 1100px; }
 
@@ -227,9 +227,4 @@ body {
   }
 
   .game-card { flex: 0 1 340px; }
-}
-
-@media (max-width: 380px) {
-  .choose-game { font-size: 1.8rem; }
-  .info-box p { font-size: 0.85rem; }
 }
