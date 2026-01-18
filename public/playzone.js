@@ -1,4 +1,4 @@
-// public/playground.js - Main Playground Logic
+// public/playzone.js - Main Playzone Logic
 
 function launchGame(gameId) {
   const roomId = generateRoomId();
