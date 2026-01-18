@@ -2,11 +2,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -26,7 +21,7 @@ body {
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
-  padding: 0 15px;   /* ⬅️ removed top padding */
+  padding: 20px 15px;
   overflow-x: hidden;
 }
 
@@ -44,29 +39,42 @@ body {
 /* Header Section */
 .header {
   text-align: center;
-  margin-bottom: 10px;
-  padding-top: 0;   /* ⬅️ remove top padding */
+  margin-bottom: 25px;
+  padding-top: 10px;
 }
 
 .logo {
   width: 100%;
-  max-width: 320px;   /* slightly smaller on mobile */
-  margin: 0 auto 4px; /* ⬅️ VERY IMPORTANT */
-  display: block;
-  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.35));
-  animation: none; /* REMOVE float for header */
+  max-width: 380px;
+  height: auto;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 .tagline {
-  font-family: 'Fredoka', sans-serif;
-  font-size: 1.1rem;
+  font-family: 'Chewy', cursive;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
-  opacity: 0.9;
-  margin-top: 2px;
-  line-height: 1.3;
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  background: linear-gradient(135deg, #FFB6C1, #FFD700, #87CEEB, #FF69B4);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textGradient 5s ease infinite;
+  line-height: 1.5;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  padding: 0 15px;
+}
+
+@keyframes textGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Choose Your Game Section */
