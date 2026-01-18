@@ -1,356 +1,432 @@
+// server.js - Meenit's Playzone Server
 const express = require('express');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
-const fs = require('fs');
+const http = require('http');
+const socketIo = require('socket.io');
 const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 
-/* -------------------- STATIC -------------------- */
+// Serve static files
 app.use(express.static('public'));
 app.use('/games', express.static('games'));
 
+// Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/odd-one-in', (req, res) => {
-  res.sendFile(path.join(__dirname, 'games/odd-one-in/game.html'));
+  res.sendFile(path.join(__dirname, 'games', 'odd-one-in', 'game.html'));
 });
 
 app.get('/undercover', (req, res) => {
-  res.sendFile(path.join(__dirname, 'games/undercover/game.html'));
+  res.sendFile(path.join(__dirname, 'games', 'undercover', 'game.html'));
 });
 
 app.get('/mafia', (req, res) => {
-  res.sendFile(path.join(__dirname, 'games/mafia/game.html'));
+  res.sendFile(path.join(__dirname, 'games', 'mafia', 'game.html'));
 });
 
-/* -------------------- GAME STATE -------------------- */
-const gameRooms = {};
+// Game State Storage
+const rooms = new Map();
 
-/* -------------------- LOAD QUESTIONS -------------------- */
-let oddOneInQuestions = {};
-try {
-  oddOneInQuestions = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'games/odd-one-in/questions.json'), 'utf8')
-  );
-} catch {
-  console.log('⚠️ Using fallback questions');
+// Helper Functions
+function getQuestionTier(playerCount) {
+  if (playerCount >= 10) return 'tier1_broad';
+  if (playerCount >= 5) return 'tier2_medium';
+  if (playerCount >= 3) return 'tier3_narrow';
+  return 'tier4_showdown';
 }
 
-/* -------------------- SOCKET -------------------- */
+function getRandomQuestion(tier, usedQuestions) {
+  const questionsPath = path.join(__dirname, 'games', 'odd-one-in', 'questions.json');
+  const questionsData = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
+  
+  const availableQuestions = questionsData[tier].questions.filter(
+    q => !usedQuestions.includes(q)
+  );
+  
+  if (availableQuestions.length === 0) {
+    return null; // All questions used
+  }
+  
+  return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+}
+
+// Socket.io Connection
 io.on('connection', (socket) => {
-  console.log('🔌 Connected:', socket.id);
+  console.log('New client connected:', socket.id);
 
-  /* ---------- JOIN ---------- */
-  socket.on('joinGame', ({ roomId, playerName, isGameMaster, gameType }) => {
-    if (!gameRooms[roomId]) {
-      gameRooms[roomId] = {
-        gameType,
-        players: [],
-        gameMaster: null,
-        gameStarted: false,
-        currentRound: 0,
-        currentQuestion: null,
-        answers: {},
-        timerActive: false,
-        timerPaused: false,
-        timerInterval: null
-      };
+  // Create Room
+  socket.on('createRoom', ({ roomId, playerName, game }) => {
+    if (rooms.has(roomId)) {
+      socket.emit('error', { message: 'Room already exists' });
+      return;
     }
 
-    const room = gameRooms[roomId];
+    const room = {
+      id: roomId,
+      game: game,
+      gm: socket.id,
+      gmName: playerName,
+      players: [{ id: socket.id, name: playerName, isGM: true, eliminated: false }],
+      state: 'lobby',
+      currentQuestion: null,
+      answers: {},
+      usedQuestions: [],
+      timer: null,
+      timerDuration: 10,
+      isPaused: false,
+      timeRemaining: 10
+    };
 
-    if (!room.players.find(p => p.id === socket.id)) {
-      const isGM = isGameMaster && room.players.length === 0;
-      room.players.push({
-        id: socket.id,
-        name: playerName,
-        eliminated: false,
-        isGameMaster: isGM
-      });
-
-      if (isGM) room.gameMaster = socket.id;
-    }
-
+    rooms.set(roomId, room);
     socket.join(roomId);
-    socket.roomId = roomId;
-
-    io.to(roomId).emit('playerListUpdate', {
-      players: room.players,
-      gameMaster: room.gameMaster
+    
+    socket.emit('roomCreated', { 
+      roomId, 
+      inviteLink: `${req.headers.host || 'localhost:3000'}/odd-one-in?room=${roomId}` 
     });
-
-    socket.emit('roomJoined', {
-      roomId,
-      isGameMaster: socket.id === room.gameMaster,
-      gameStarted: room.gameStarted
-    });
+    
+    io.to(roomId).emit('updatePlayers', room.players);
   });
 
-  /* ---------- REMOVE PLAYER ---------- */
+  // Join Room
+  socket.on('joinRoom', ({ roomId, playerName }) => {
+    const room = rooms.get(roomId);
+    
+    if (!room) {
+      socket.emit('error', { message: 'Room not found' });
+      return;
+    }
+
+    if (room.state !== 'lobby') {
+      socket.emit('error', { message: 'Game already in progress' });
+      return;
+    }
+
+    const playerExists = room.players.some(p => p.name === playerName);
+    if (playerExists) {
+      socket.emit('error', { message: 'Name already taken' });
+      return;
+    }
+
+    room.players.push({ 
+      id: socket.id, 
+      name: playerName, 
+      isGM: false, 
+      eliminated: false 
+    });
+    
+    socket.join(roomId);
+    socket.emit('joinedRoom', { roomId, isGM: false });
+    io.to(roomId).emit('updatePlayers', room.players);
+  });
+
+  // Remove Player (GM only)
   socket.on('removePlayer', ({ roomId, playerId }) => {
-    const room = gameRooms[roomId];
-    if (!room || socket.id !== room.gameMaster) return;
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
 
     room.players = room.players.filter(p => p.id !== playerId);
-    io.to(playerId).emit('removedFromGame');
-
-    io.to(roomId).emit('playerListUpdate', {
-      players: room.players,
-      gameMaster: room.gameMaster
-    });
+    
+    const playerSocket = io.sockets.sockets.get(playerId);
+    if (playerSocket) {
+      playerSocket.leave(roomId);
+      playerSocket.emit('kicked');
+    }
+    
+    io.to(roomId).emit('updatePlayers', room.players);
   });
 
-  /* ---------- START GAME ---------- */
+  // Start Game
   socket.on('startGame', ({ roomId }) => {
-    const room = gameRooms[roomId];
-    if (!room || socket.id !== room.gameMaster || room.gameStarted) return;
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
 
-    room.gameStarted = true;
-    room.currentRound = 1;
+    if (room.players.length < 2) {
+      socket.emit('error', { message: 'Need at least 2 players to start' });
+      return;
+    }
 
-    const question = selectQuestion(room.players.filter(p => !p.eliminated).length);
-    room.currentQuestion = question;
+    room.state = 'question';
+    room.answers = {};
+    
+    const activePlayers = room.players.filter(p => !p.eliminated).length;
+    const tier = getQuestionTier(activePlayers);
+    room.currentQuestion = getRandomQuestion(tier, room.usedQuestions);
+    
+    if (room.currentQuestion) {
+      room.usedQuestions.push(room.currentQuestion);
+    }
 
+    room.timeRemaining = room.timerDuration;
+    
     io.to(roomId).emit('gameStarted', {
-      round: room.currentRound,
-      question
+      question: room.currentQuestion,
+      timeRemaining: room.timeRemaining
     });
 
-    setTimeout(() => startTimer(roomId), 2000);
+    startTimer(roomId);
   });
 
-  /* ---------- SUBMIT ANSWER ---------- */
+  // Submit Answer
   socket.on('submitAnswer', ({ roomId, answer }) => {
-    const room = gameRooms[roomId];
-    if (!room || !room.timerActive || room.timerPaused) return;
+    const room = rooms.get(roomId);
+    if (!room || room.state !== 'question') return;
 
     const player = room.players.find(p => p.id === socket.id);
     if (!player || player.eliminated) return;
 
-    if (room.answers[socket.id]) return; // prevent double submit
-
     room.answers[socket.id] = {
-      playerId: socket.id,
       playerName: player.name,
-      answer: answer.trim()
+      answer: answer.trim(),
+      isGM: player.isGM
     };
 
     socket.emit('answerSubmitted');
-  });
-
-  /* ---------- TIMER CONTROLS ---------- */
-  socket.on('pauseTimer', (roomId) => {
-    const room = gameRooms[roomId];
-    if (room && socket.id === room.gameMaster) {
-      room.timerPaused = true;
-      io.to(roomId).emit('timerPaused');
-    }
-  });
-
-  socket.on('resumeTimer', (roomId) => {
-    const room = gameRooms[roomId];
-    if (room && socket.id === room.gameMaster) {
-      room.timerPaused = false;
-      io.to(roomId).emit('timerResumed');
-    }
-  });
-
-  socket.on('skipQuestion', (roomId) => {
-    if (socket.id === gameRooms[roomId]?.gameMaster) {
-      endRound(roomId);
-    }
-  });
-
-  socket.on('editQuestion', ({ roomId, newQuestion }) => {
-    if (socket.id === gameRooms[roomId]?.gameMaster) {
-      gameRooms[roomId].currentQuestion = newQuestion;
-      io.to(roomId).emit('questionUpdated', { question: newQuestion });
-    }
-  });
-
-  /* ---------- GM ELIMINATION ---------- */
-  socket.on('eliminatePlayer', ({ roomId, playerId }) => {
-    const room = gameRooms[roomId];
-    if (!room || socket.id !== room.gameMaster) return;
-
-    const player = room.players.find(p => p.id === playerId);
-    if (player) player.eliminated = true;
-
-    io.to(roomId).emit('playerListUpdate', {
-      players: room.players,
-      gameMaster: room.gameMaster
+    
+    // Notify GM of submission count
+    const submissionCount = Object.keys(room.answers).length;
+    const activeCount = room.players.filter(p => !p.eliminated).length;
+    io.to(room.gm).emit('submissionUpdate', { 
+      submitted: submissionCount, 
+      total: activeCount 
     });
   });
 
-  /* ---------- NEXT ROUND ---------- */
-  socket.on('nextRound', (roomId) => {
-    if (socket.id === gameRooms[roomId]?.gameMaster) {
-      nextRound(roomId);
+  // Pause Timer
+  socket.on('pauseTimer', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
+
+    room.isPaused = true;
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+    io.to(roomId).emit('timerPaused', { timeRemaining: room.timeRemaining });
+  });
+
+  // Resume Timer
+  socket.on('resumeTimer', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id || !room.isPaused) return;
+
+    room.isPaused = false;
+    startTimer(roomId);
+    io.to(roomId).emit('timerResumed', { timeRemaining: room.timeRemaining });
+  });
+
+  // Show Answers (Manual)
+  socket.on('showAnswers', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
+
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+
+    room.state = 'review';
+    const sortedAnswers = sortAnswers(room.answers);
+    io.to(roomId).emit('answersRevealed', { answers: sortedAnswers });
+  });
+
+  // Skip Question
+  socket.on('skipQuestion', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
+
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+
+    nextQuestion(roomId);
+  });
+
+  // Edit Question
+  socket.on('editQuestion', ({ roomId, newQuestion }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
+
+    room.currentQuestion = newQuestion;
+    room.answers = {};
+    room.timeRemaining = room.timerDuration;
+
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+
+    io.to(roomId).emit('questionEdited', { 
+      question: newQuestion,
+      timeRemaining: room.timeRemaining
+    });
+
+    startTimer(roomId);
+  });
+
+  // Eliminate Players
+  socket.on('eliminatePlayers', ({ roomId, playerIds }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
+
+    playerIds.forEach(playerId => {
+      const player = room.players.find(p => p.id === playerId);
+      if (player) {
+        player.eliminated = true;
+      }
+    });
+
+    io.to(roomId).emit('playersEliminated', { 
+      eliminatedIds: playerIds,
+      players: room.players 
+    });
+
+    // Check for winner
+    const activePlayers = room.players.filter(p => !p.eliminated);
+    if (activePlayers.length === 1) {
+      room.state = 'ended';
+      io.to(roomId).emit('gameEnded', { winner: activePlayers[0] });
     }
   });
 
-  /* ---------- RESET ---------- */
-  socket.on('resetGame', (roomId) => {
-    const room = gameRooms[roomId];
-    if (!room || socket.id !== room.gameMaster) return;
+  // Next Question
+  socket.on('nextQuestion', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
 
-    clearInterval(room.timerInterval);
+    nextQuestion(roomId);
+  });
+
+  // Restart Game
+  socket.on('restartGame', ({ roomId }) => {
+    const room = rooms.get(roomId);
+    if (!room || room.gm !== socket.id) return;
 
     room.players.forEach(p => p.eliminated = false);
-    room.gameStarted = false;
-    room.currentRound = 0;
+    room.state = 'lobby';
     room.answers = {};
-    room.timerActive = false;
-    room.timerPaused = false;
+    room.usedQuestions = [];
+    room.currentQuestion = null;
 
-    io.to(roomId).emit('gameReset');
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+
+    io.to(roomId).emit('gameRestarted');
+    io.to(roomId).emit('updatePlayers', room.players);
   });
 
-  /* ---------- DISCONNECT ---------- */
+  // Disconnect
   socket.on('disconnect', () => {
-    const room = gameRooms[socket.roomId];
-    if (!room) return;
-
-    room.players = room.players.filter(p => p.id !== socket.id);
-
-    if (socket.id === room.gameMaster && room.players.length > 0) {
-      room.players.forEach(p => p.isGameMaster = false);
-      room.players[0].isGameMaster = true;
-      room.gameMaster = room.players[0].id;
-    }
-
-    io.to(socket.roomId).emit('playerListUpdate', {
-      players: room.players,
-      gameMaster: room.gameMaster
+    console.log('Client disconnected:', socket.id);
+    
+    rooms.forEach((room, roomId) => {
+      const player = room.players.find(p => p.id === socket.id);
+      
+      if (player) {
+        if (player.isGM) {
+          // GM left - end game
+          io.to(roomId).emit('gmLeft');
+          rooms.delete(roomId);
+        } else {
+          // Regular player left
+          room.players = room.players.filter(p => p.id !== socket.id);
+          io.to(roomId).emit('updatePlayers', room.players);
+        }
+      }
     });
-
-    if (room.players.length === 0) {
-      delete gameRooms[socket.roomId];
-    }
   });
 });
 
-/* -------------------- HELPERS -------------------- */
-
-function selectQuestion(count) {
-  let pool =
-    count >= 10 ? oddOneInQuestions.tier1_broad?.questions :
-    count >= 5  ? oddOneInQuestions.tier2_medium?.questions :
-    count >= 3  ? oddOneInQuestions.tier3_narrow?.questions :
-                  oddOneInQuestions.tier4_final?.questions;
-
-  pool = pool || ['Say anything'];
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
+// Timer Function
 function startTimer(roomId) {
-  const room = gameRooms[roomId];
+  const room = rooms.get(roomId);
   if (!room) return;
 
-  clearInterval(room.timerInterval);
+  room.timer = setInterval(() => {
+    if (room.isPaused) return;
 
-  room.timerActive = true;
-  room.timerPaused = false;
-  let timeLeft = 10;
+    room.timeRemaining--;
+    io.to(roomId).emit('timerUpdate', { timeRemaining: room.timeRemaining });
 
-  io.to(roomId).emit('timerStarted', { timeLeft });
-
-  room.timerInterval = setInterval(() => {
-    if (!room.timerActive) return clearInterval(room.timerInterval);
-
-    if (!room.timerPaused) {
-      timeLeft--;
-      io.to(roomId).emit('timerUpdate', { timeLeft });
-
-      if (timeLeft <= 0) {
-        clearInterval(room.timerInterval);
-        room.timerActive = false;
-        endRound(roomId);
-      }
+    if (room.timeRemaining <= 0) {
+      clearInterval(room.timer);
+      room.timer = null;
+      room.state = 'review';
+      
+      const sortedAnswers = sortAnswers(room.answers);
+      io.to(roomId).emit('answersRevealed', { answers: sortedAnswers });
     }
   }, 1000);
 }
 
-function endRound(roomId) {
-  const room = gameRooms[roomId];
+// Next Question Function
+function nextQuestion(roomId) {
+  const room = rooms.get(roomId);
   if (!room) return;
 
-  // Ensure blanks exist
-  room.players.forEach(p => {
-    if (!p.eliminated && !room.answers[p.id]) {
-      room.answers[p.id] = {
-        playerId: p.id,
-        playerName: p.name,
-        answer: ""
-      };
-    }
-  });
-
-  io.to(roomId).emit('roundEnded', {
-    answers: room.answers,
-    answerGroups: groupAnswers(room.answers)
-  });
-}
-
-function groupAnswers(answers) {
-  const map = {};
-  const duplicates = [];
-  const uniques = [];
-  const blanks = [];
-
-  Object.values(answers).forEach(a => {
-    if (!a.answer.trim()) {
-      blanks.push(a);
-      return;
-    }
-
-    const key = a.answer.toLowerCase().trim();
-    map[key] = map[key] || [];
-    map[key].push(a);
-  });
-
-  Object.values(map).forEach(group => {
-    group.length > 1 ? duplicates.push(group) : uniques.push(group[0]);
-  });
-
-  duplicates.sort((a, b) => a[0].answer.localeCompare(b[0].answer));
-  blanks.sort((a, b) => a.playerName.localeCompare(b.playerName));
-  uniques.sort((a, b) => a.playerName.localeCompare(b.playerName));
-
-  return { duplicates, blanks, uniques };
-}
-
-function nextRound(roomId) {
-  const room = gameRooms[roomId];
-  if (!room) return;
-
-  room.answers = {};
-
-  const alive = room.players.filter(p => !p.eliminated);
-  if (alive.length <= 1) {
-    io.to(roomId).emit('gameEnded', {
-      winner: alive[0] || null,
-      players: room.players
-    });
+  const activePlayers = room.players.filter(p => !p.eliminated);
+  
+  if (activePlayers.length === 1) {
+    room.state = 'ended';
+    io.to(roomId).emit('gameEnded', { winner: activePlayers[0] });
     return;
   }
 
-  room.currentRound++;
-  room.currentQuestion = selectQuestion(alive.length);
+  room.state = 'question';
+  room.answers = {};
+  
+  const tier = getQuestionTier(activePlayers.length);
+  room.currentQuestion = getRandomQuestion(tier, room.usedQuestions);
+  
+  if (!room.currentQuestion) {
+    // All questions exhausted
+    room.currentQuestion = "Name something random!";
+  } else {
+    room.usedQuestions.push(room.currentQuestion);
+  }
 
-  io.to(roomId).emit('nextRound', {
-    round: room.currentRound,
-    question: room.currentQuestion
+  room.timeRemaining = room.timerDuration;
+  
+  io.to(roomId).emit('nextQuestion', {
+    question: room.currentQuestion,
+    timeRemaining: room.timeRemaining
   });
 
-  setTimeout(() => startTimer(roomId), 2000);
+  startTimer(roomId);
 }
 
-/* -------------------- START -------------------- */
-http.listen(PORT, () => {
+// Sort Answers Helper
+function sortAnswers(answers) {
+  const answersArray = Object.entries(answers).map(([id, data]) => ({
+    playerId: id,
+    playerName: data.playerName,
+    answer: data.answer,
+    isGM: data.isGM
+  }));
+
+  return answersArray.sort((a, b) => {
+    // Blank answers first
+    if (!a.answer && b.answer) return -1;
+    if (a.answer && !b.answer) return 1;
+    if (!a.answer && !b.answer) return 0;
+
+    // Alphabetical order (case-insensitive)
+    return a.answer.toLowerCase().localeCompare(b.answer.toLowerCase());
+  });
+}
+
+// Start Server
+server.listen(PORT, () => {
   console.log(`🎮 Meenit's Playzone running on port ${PORT}`);
 });
