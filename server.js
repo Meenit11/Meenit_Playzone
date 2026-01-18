@@ -1,32 +1,16 @@
 // server.js - Meenit's Playzone Server
 const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const path = require('path');
-const fs = require('fs');
-
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-// Serve static files with proper MIME types
-app.use(express.static('public', {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
-
-app.use('/games', express.static('games', {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
+// Serve static files
+app.use(express.static('public'));
+app.use('/games', express.static('games'));
 
 // Routes
 app.get('/', (req, res) => {
@@ -45,421 +29,415 @@ app.get('/mafia', (req, res) => {
   res.sendFile(path.join(__dirname, 'games', 'mafia', 'game.html'));
 });
 
-// Game State Storage
-const rooms = new Map();
+// Game state
+let gameRooms = {};
 
-// Helper Functions
-function getQuestionTier(playerCount) {
-  if (playerCount >= 10) return 'tier1_broad';
-  if (playerCount >= 5) return 'tier2_medium';
-  if (playerCount >= 3) return 'tier3_narrow';
-  return 'tier4_showdown';
+// Load questions for Odd One In
+let oddOneInQuestions = {};
+try {
+  oddOneInQuestions = JSON.parse(fs.readFileSync(path.join(__dirname, 'games', 'odd-one-in', 'questions.json'), 'utf8'));
+} catch (err) {
+  console.log('Questions file not found, using defaults');
+  oddOneInQuestions = {
+    tier1_broad: { questions: ['Name a fruit', 'Name a color', 'Name a country'] },
+    tier2_medium: { questions: ['Name a vegetable', 'Name an animal', 'Name a city'] },
+    tier3_narrow: { questions: ['Name a number 1-10', 'Pick heads or tails', 'Choose left or right'] },
+    tier4_final: { questions: ['Pick 0 or 1', 'Even or Odd', 'Yes or No'] }
+  };
 }
 
-function getRandomQuestion(tier, usedQuestions) {
-  const questionsPath = path.join(__dirname, 'games', 'odd-one-in', 'questions.json');
-  const questionsData = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
-  
-  const availableQuestions = questionsData[tier].questions.filter(
-    q => !usedQuestions.includes(q)
-  );
-  
-  if (availableQuestions.length === 0) {
-    return null; // All questions used
-  }
-  
-  return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-}
-
-// Socket.io Connection
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('User connected:', socket.id);
 
-  // Create Room
-  socket.on('createRoom', ({ roomId, playerName, game }) => {
-    if (rooms.has(roomId)) {
-      socket.emit('error', { message: 'Room already exists' });
-      return;
+  // Join game room
+  socket.on('joinGame', (data) => {
+    const { roomId, playerName, isGameMaster, gameType } = data;
+    
+    console.log('Join game request:', { roomId, playerName, isGameMaster, gameType });
+    
+    if (!gameRooms[roomId]) {
+      gameRooms[roomId] = {
+        gameType: gameType,
+        players: [],
+        gameMaster: null,
+        gameStarted: false,
+        currentRound: 0,
+        currentQuestion: null,
+        answers: {},
+        timerActive: false,
+        timerPaused: false,
+        currentTimerInterval: null,
+        timeRemaining: 10
+      };
     }
 
-    const room = {
-      id: roomId,
-      game: game,
-      gm: socket.id,
-      gmName: playerName,
-      players: [{ id: socket.id, name: playerName, isGM: true, eliminated: false }],
-      state: 'lobby',
-      currentQuestion: null,
-      answers: {},
-      usedQuestions: [],
-      timer: null,
-      timerDuration: 10,
-      isPaused: false,
-      timeRemaining: 10
-    };
+    const room = gameRooms[roomId];
+    
+    const existingPlayer = room.players.find(p => p.id === socket.id);
+    if (!existingPlayer) {
+      const canBeGameMaster = isGameMaster && room.players.length === 0;
+      
+      const player = {
+        id: socket.id,
+        name: playerName,
+        isGameMaster: canBeGameMaster,
+        eliminated: false
+      };
+      
+      room.players.push(player);
+      
+      if (canBeGameMaster) {
+        room.gameMaster = socket.id;
+      }
+    }
 
-    rooms.set(roomId, room);
     socket.join(roomId);
+    socket.roomId = roomId;
     
-    // Generate invite link - use environment variable or localhost
-    const baseUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
-    const inviteLink = `${baseUrl}/odd-one-in?room=${roomId}`;
+    console.log('Room after join:', room);
     
-    socket.emit('roomCreated', { 
-      roomId, 
-      inviteLink 
+    io.to(roomId).emit('playerListUpdate', {
+      players: room.players,
+      gameMaster: room.gameMaster
     });
     
-    io.to(roomId).emit('updatePlayers', room.players);
-  });
-
-  // Join Room
-  socket.on('joinRoom', ({ roomId, playerName }) => {
-    const room = rooms.get(roomId);
-    
-    if (!room) {
-      socket.emit('error', { message: 'Room not found' });
-      return;
-    }
-
-    if (room.state !== 'lobby') {
-      socket.emit('error', { message: 'Game already in progress' });
-      return;
-    }
-
-    const playerExists = room.players.some(p => p.name === playerName);
-    if (playerExists) {
-      socket.emit('error', { message: 'Name already taken' });
-      return;
-    }
-
-    room.players.push({ 
-      id: socket.id, 
-      name: playerName, 
-      isGM: false, 
-      eliminated: false 
-    });
-    
-    socket.join(roomId);
-    socket.emit('joinedRoom', { roomId, isGM: false });
-    io.to(roomId).emit('updatePlayers', room.players);
-  });
-
-  // Remove Player (GM only)
-  socket.on('removePlayer', ({ roomId, playerId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    room.players = room.players.filter(p => p.id !== playerId);
-    
-    const playerSocket = io.sockets.sockets.get(playerId);
-    if (playerSocket) {
-      playerSocket.leave(roomId);
-      playerSocket.emit('kicked');
-    }
-    
-    io.to(roomId).emit('updatePlayers', room.players);
-  });
-
-  // Start Game
-  socket.on('startGame', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    
-    console.log('📢 Start Game requested for room:', roomId); // Debug
-    console.log('Room exists?', !!room); // Debug
-    console.log('Socket is GM?', room ? room.gm === socket.id : 'N/A'); // Debug
-    
-    if (!room || room.gm !== socket.id) {
-      console.log('❌ Unauthorized or room not found'); // Debug
-      socket.emit('error', { message: 'Only Game Master can start the game' });
-      return;
-    }
-
-    if (room.players.length < 1) {
-      console.log('❌ Not enough players'); // Debug
-      socket.emit('error', { message: 'Need at least 1 player to start' });
-      return;
-    }
-
-    console.log('✅ Starting game with', room.players.length, 'players'); // Debug
-    
-    room.state = 'question';
-    room.answers = {};
-    
-    const activePlayers = room.players.filter(p => !p.eliminated).length;
-    const tier = getQuestionTier(activePlayers);
-    room.currentQuestion = getRandomQuestion(tier, room.usedQuestions);
-    
-    console.log('Question tier:', tier); // Debug
-    console.log('Question:', room.currentQuestion); // Debug
-    
-    if (room.currentQuestion) {
-      room.usedQuestions.push(room.currentQuestion);
-    }
-
-    room.timeRemaining = room.timerDuration;
-    
-    io.to(roomId).emit('gameStarted', {
-      question: room.currentQuestion,
-      timeRemaining: room.timeRemaining
-    });
-
-    console.log('✅ Game started signal sent'); // Debug
-    startTimer(roomId);
-  });
-
-  // Submit Answer
-  socket.on('submitAnswer', ({ roomId, answer }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.state !== 'question') return;
-
-    const player = room.players.find(p => p.id === socket.id);
-    if (!player || player.eliminated) return;
-
-    room.answers[socket.id] = {
-      playerName: player.name,
-      answer: answer.trim(),
-      isGM: player.isGM
-    };
-
-    socket.emit('answerSubmitted');
-    
-    // Notify GM of submission count
-    const submissionCount = Object.keys(room.answers).length;
-    const activeCount = room.players.filter(p => !p.eliminated).length;
-    io.to(room.gm).emit('submissionUpdate', { 
-      submitted: submissionCount, 
-      total: activeCount 
+    socket.emit('roomJoined', {
+      roomId: roomId,
+      isGameMaster: socket.id === room.gameMaster,
+      gameStarted: room.gameStarted
     });
   });
 
-  // Pause Timer
-  socket.on('pauseTimer', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    room.isPaused = true;
-    if (room.timer) {
-      clearInterval(room.timer);
-      room.timer = null;
+  // Remove player
+  socket.on('removePlayer', (data) => {
+    const { roomId, playerId } = data;
+    const room = gameRooms[roomId];
+    
+    if (room && socket.id === room.gameMaster) {
+      room.players = room.players.filter(p => p.id !== playerId);
+      io.to(playerId).emit('removedFromGame');
+      
+      io.to(roomId).emit('playerListUpdate', {
+        players: room.players,
+        gameMaster: room.gameMaster
+      });
     }
-    io.to(roomId).emit('timerPaused', { timeRemaining: room.timeRemaining });
   });
 
-  // Resume Timer
-  socket.on('resumeTimer', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id || !room.isPaused) return;
-
-    room.isPaused = false;
-    startTimer(roomId);
-    io.to(roomId).emit('timerResumed', { timeRemaining: room.timeRemaining });
-  });
-
-  // Show Answers (Manual)
-  socket.on('showAnswers', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    if (room.timer) {
-      clearInterval(room.timer);
-      room.timer = null;
+  // Start game
+  socket.on('startGame', (data) => {
+    const room = gameRooms[data.roomId];
+    
+    console.log('Start game request for room:', data.roomId);
+    console.log('Room exists:', !!room);
+    console.log('Is GM:', room ? socket.id === room.gameMaster : false);
+    
+    if (room && socket.id === room.gameMaster && !room.gameStarted) {
+      const activePlayers = room.players.filter(p => !p.eliminated).length;
+      
+      if (activePlayers < 2) {
+        socket.emit('error', { message: 'Need at least 2 players to start!' });
+        return;
+      }
+      
+      room.gameStarted = true;
+      room.currentRound = 1;
+      
+      const question = selectQuestion(activePlayers);
+      room.currentQuestion = question;
+      room.answers = {};
+      room.timeRemaining = 10;
+      
+      console.log('Starting game with question:', question);
+      
+      io.to(data.roomId).emit('gameStarted', {
+        round: room.currentRound,
+        question: question
+      });
+      
+      setTimeout(() => {
+        if (room && room.gameStarted) {
+          startTimer(data.roomId);
+        }
+      }, 2000);
+    } else {
+      console.log('Cannot start game - conditions not met');
     }
-
-    room.state = 'review';
-    const sortedAnswers = sortAnswers(room.answers);
-    io.to(roomId).emit('answersRevealed', { answers: sortedAnswers });
   });
 
-  // Skip Question
-  socket.on('skipQuestion', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    if (room.timer) {
-      clearInterval(room.timer);
-      room.timer = null;
+  // Submit answer
+  socket.on('submitAnswer', (data) => {
+    const { roomId, answer } = data;
+    const room = gameRooms[roomId];
+    
+    if (room && room.timerActive && !room.timerPaused) {
+      const player = room.players.find(p => p.id === socket.id);
+      if (player && !player.eliminated && !room.answers[socket.id]) {
+        room.answers[socket.id] = {
+          playerName: player.name,
+          answer: answer.trim(),
+          playerId: socket.id
+        };
+        
+        socket.emit('answerSubmitted', { answer: answer });
+      }
     }
-
-    nextQuestion(roomId);
   });
 
-  // Edit Question
-  socket.on('editQuestion', ({ roomId, newQuestion }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    room.currentQuestion = newQuestion;
-    room.answers = {};
-    room.timeRemaining = room.timerDuration;
-
-    if (room.timer) {
-      clearInterval(room.timer);
-      room.timer = null;
+  // Game Master controls
+  socket.on('pauseTimer', (roomId) => {
+    const room = gameRooms[roomId];
+    if (room && socket.id === room.gameMaster) {
+      room.timerPaused = true;
+      io.to(roomId).emit('timerPaused');
     }
-
-    io.to(roomId).emit('questionEdited', { 
-      question: newQuestion,
-      timeRemaining: room.timeRemaining
-    });
-
-    startTimer(roomId);
   });
 
-  // Eliminate Players
-  socket.on('eliminatePlayers', ({ roomId, playerIds }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
+  socket.on('resumeTimer', (roomId) => {
+    const room = gameRooms[roomId];
+    if (room && socket.id === room.gameMaster) {
+      room.timerPaused = false;
+      io.to(roomId).emit('timerResumed');
+    }
+  });
 
-    playerIds.forEach(playerId => {
+  socket.on('skipQuestion', (roomId) => {
+    const room = gameRooms[roomId];
+    if (room && socket.id === room.gameMaster) {
+      if (room.currentTimerInterval) {
+        clearInterval(room.currentTimerInterval);
+        room.timerActive = false;
+      }
+      nextRound(roomId);
+    }
+  });
+
+  socket.on('editQuestion', (data) => {
+    const { roomId, newQuestion } = data;
+    const room = gameRooms[roomId];
+    if (room && socket.id === room.gameMaster) {
+      room.currentQuestion = newQuestion;
+      io.to(roomId).emit('questionUpdated', { question: newQuestion });
+    }
+  });
+
+  socket.on('eliminatePlayer', (data) => {
+    const { roomId, playerId } = data;
+    const room = gameRooms[roomId];
+    
+    if (room && socket.id === room.gameMaster) {
       const player = room.players.find(p => p.id === playerId);
       if (player) {
         player.eliminated = true;
+        io.to(roomId).emit('playerEliminated', {
+          playerId: playerId,
+          playerName: player.name
+        });
+        
+        io.to(roomId).emit('playerListUpdate', {
+          players: room.players,
+          gameMaster: room.gameMaster
+        });
       }
-    });
-
-    io.to(roomId).emit('playersEliminated', { 
-      eliminatedIds: playerIds,
-      players: room.players 
-    });
-
-    // Check for winner
-    const activePlayers = room.players.filter(p => !p.eliminated);
-    if (activePlayers.length === 1) {
-      room.state = 'ended';
-      io.to(roomId).emit('gameEnded', { winner: activePlayers[0] });
     }
   });
 
-  // Next Question
-  socket.on('nextQuestion', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    nextQuestion(roomId);
-  });
-
-  // Restart Game
-  socket.on('restartGame', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    room.players.forEach(p => p.eliminated = false);
-    room.state = 'lobby';
-    room.answers = {};
-    room.usedQuestions = [];
-    room.currentQuestion = null;
-
-    if (room.timer) {
-      clearInterval(room.timer);
-      room.timer = null;
+  socket.on('nextRound', (roomId) => {
+    const room = gameRooms[roomId];
+    if (room && socket.id === room.gameMaster) {
+      nextRound(roomId);
     }
-
-    io.to(roomId).emit('gameRestarted');
-    io.to(roomId).emit('updatePlayers', room.players);
   });
 
-  // Disconnect
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-    
-    rooms.forEach((room, roomId) => {
-      const player = room.players.find(p => p.id === socket.id);
+  socket.on('resetGame', (roomId) => {
+    const room = gameRooms[roomId];
+    if (room && socket.id === room.gameMaster) {
+      if (room.currentTimerInterval) {
+        clearInterval(room.currentTimerInterval);
+      }
       
-      if (player) {
-        if (player.isGM) {
-          // GM left - end game
-          io.to(roomId).emit('gmLeft');
-          rooms.delete(roomId);
-        } else {
-          // Regular player left
-          room.players = room.players.filter(p => p.id !== socket.id);
-          io.to(roomId).emit('updatePlayers', room.players);
+      room.players.forEach(p => {
+        p.eliminated = false;
+      });
+      room.currentRound = 0;
+      room.gameStarted = false;
+      room.answers = {};
+      room.timerActive = false;
+      room.timerPaused = false;
+      room.timeRemaining = 10;
+      
+      io.to(roomId).emit('gameReset');
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+    
+    if (socket.roomId) {
+      const room = gameRooms[socket.roomId];
+      if (room) {
+        room.players = room.players.filter(p => p.id !== socket.id);
+        
+        if (socket.id === room.gameMaster && room.players.length > 0) {
+          room.gameMaster = room.players[0].id;
+          room.players[0].isGameMaster = true;
+        }
+        
+        io.to(socket.roomId).emit('playerListUpdate', {
+          players: room.players,
+          gameMaster: room.gameMaster
+        });
+        
+        if (room.players.length === 0) {
+          delete gameRooms[socket.roomId];
         }
       }
-    });
+    }
   });
 });
 
-// Timer Function
+// Helper functions
+function selectQuestion(playerCount) {
+  let tier;
+  if (playerCount >= 10) {
+    tier = oddOneInQuestions.tier1_broad?.questions || ['Name a fruit.'];
+  } else if (playerCount >= 5) {
+    tier = oddOneInQuestions.tier2_medium?.questions || ['Name a color.'];
+  } else if (playerCount >= 3) {
+    tier = oddOneInQuestions.tier3_narrow?.questions || ['Pick 0 or 1.'];
+  } else {
+    tier = oddOneInQuestions.tier4_final?.questions || ['Even or Odd.'];
+  }
+  
+  return tier[Math.floor(Math.random() * tier.length)];
+}
+
 function startTimer(roomId) {
-  const room = rooms.get(roomId);
+  const room = gameRooms[roomId];
   if (!room) return;
-
-  room.timer = setInterval(() => {
-    if (room.isPaused) return;
-
-    room.timeRemaining--;
-    io.to(roomId).emit('timerUpdate', { timeRemaining: room.timeRemaining });
-
-    if (room.timeRemaining <= 0) {
-      clearInterval(room.timer);
-      room.timer = null;
-      room.state = 'review';
+  
+  if (room.currentTimerInterval) {
+    clearInterval(room.currentTimerInterval);
+  }
+  
+  room.timerActive = true;
+  room.timerPaused = false;
+  room.timeRemaining = 10;
+  
+  io.to(roomId).emit('timerStarted', { timeLeft: room.timeRemaining });
+  
+  room.currentTimerInterval = setInterval(() => {
+    if (!room || !room.timerActive) {
+      clearInterval(room.currentTimerInterval);
+      return;
+    }
+    
+    if (!room.timerPaused) {
+      room.timeRemaining--;
+      io.to(roomId).emit('timerUpdate', { timeLeft: room.timeRemaining });
       
-      const sortedAnswers = sortAnswers(room.answers);
-      io.to(roomId).emit('answersRevealed', { answers: sortedAnswers });
+      if (room.timeRemaining <= 0) {
+        clearInterval(room.currentTimerInterval);
+        room.timerActive = false;
+        endRound(roomId);
+      }
     }
   }, 1000);
 }
 
-// Next Question Function
-function nextQuestion(roomId) {
-  const room = rooms.get(roomId);
+function endRound(roomId) {
+  const room = gameRooms[roomId];
   if (!room) return;
-
-  const activePlayers = room.players.filter(p => !p.eliminated);
   
-  if (activePlayers.length === 1) {
-    room.state = 'ended';
-    io.to(roomId).emit('gameEnded', { winner: activePlayers[0] });
-    return;
-  }
+  // Auto-eliminate players who didn't answer
+  room.players.forEach(player => {
+    if (!player.eliminated && !room.answers[player.id]) {
+      player.eliminated = true;
+    }
+  });
+  
+  const answerGroups = groupAnswers(room.answers);
+  
+  io.to(roomId).emit('roundEnded', {
+    answers: room.answers,
+    answerGroups: answerGroups
+  });
+  
+  io.to(roomId).emit('playerListUpdate', {
+    players: room.players,
+    gameMaster: room.gameMaster
+  });
+}
 
-  room.state = 'question';
+function groupAnswers(answers) {
+  const groups = {
+    duplicates: [],
+    unique: []
+  };
+  
+  const answerMap = {};
+  
+  Object.values(answers).forEach(ans => {
+    const key = ans.answer.toLowerCase().trim();
+    if (!answerMap[key]) {
+      answerMap[key] = [];
+    }
+    answerMap[key].push(ans);
+  });
+  
+  Object.entries(answerMap).forEach(([key, players]) => {
+    if (players.length > 1) {
+      groups.duplicates.push({
+        answer: key,
+        players: players,
+        count: players.length
+      });
+    } else {
+      groups.unique.push(players[0]);
+    }
+  });
+  
+  return groups;
+}
+
+function nextRound(roomId) {
+  const room = gameRooms[roomId];
+  if (!room) return;
+  
+  if (room.currentTimerInterval) {
+    clearInterval(room.currentTimerInterval);
+    room.timerActive = false;
+  }
+  
   room.answers = {};
   
-  const tier = getQuestionTier(activePlayers.length);
-  room.currentQuestion = getRandomQuestion(tier, room.usedQuestions);
+  const activePlayers = room.players.filter(p => !p.eliminated);
   
-  if (!room.currentQuestion) {
-    // All questions exhausted
-    room.currentQuestion = "Name something random!";
-  } else {
-    room.usedQuestions.push(room.currentQuestion);
+  if (activePlayers.length <= 1) {
+    io.to(roomId).emit('gameEnded', {
+      winner: activePlayers.length === 1 ? activePlayers[0] : null,
+      players: room.players
+    });
+    return;
   }
-
-  room.timeRemaining = room.timerDuration;
   
-  io.to(roomId).emit('nextQuestion', {
-    question: room.currentQuestion,
-    timeRemaining: room.timeRemaining
+  room.currentRound++;
+  const question = selectQuestion(activePlayers.length);
+  room.currentQuestion = question;
+  room.timeRemaining = 10;
+  
+  io.to(roomId).emit('nextRound', {
+    round: room.currentRound,
+    question: question
   });
-
-  startTimer(roomId);
+  
+  setTimeout(() => {
+    if (room && room.gameStarted) {
+      startTimer(roomId);
+    }
+  }, 2000);
 }
 
-// Sort Answers Helper
-function sortAnswers(answers) {
-  const answersArray = Object.entries(answers).map(([id, data]) => ({
-    playerId: id,
-    playerName: data.playerName,
-    answer: data.answer,
-    isGM: data.isGM
-  }));
-
-  return answersArray.sort((a, b) => {
-    // Blank answers first
-    if (!a.answer && b.answer) return -1;
-    if (a.answer && !b.answer) return 1;
-    if (!a.answer && !b.answer) return 0;
-
-    // Alphabetical order (case-insensitive)
-    return a.answer.toLowerCase().localeCompare(b.answer.toLowerCase());
-  });
-}
-
-// Start Server
-server.listen(PORT, () => {
-  console.log(`🎮 Meenit's Playzone running on port ${PORT}`);
+http.listen(PORT, () => {
+  console.log(`🎪 Meenit's Playzone running on port ${PORT}`);
 });
