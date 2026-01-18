@@ -1,4 +1,4 @@
-/* Meenit's Playzone - Clean & Bright Design */
+/* Meenit's Playzone - Refined Design */
 
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
@@ -10,8 +10,11 @@
 
 body {
   font-family: 'Fredoka', sans-serif;
-  /* Light, Bright, and Modern Gradient */
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  /* Slightly Darker, Richer Shade Gradient */
+  background: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  
   /* Perfect Center Alignment */
   display: flex;
   flex-direction: column;
@@ -32,7 +35,7 @@ body {
 .header {
   width: 100%;
   text-align: center;
-  margin-bottom: 0; /* Removed margin to pull title closer */
+  margin-bottom: 0;
   padding-top: 0; 
 }
 
@@ -44,20 +47,24 @@ body {
   margin: 0 auto;
 }
 
-/* Choose Your Game Section - Shadows Removed */
+/* --- Choose Your Game (With Pink "Border" Effect) --- */
 .game-title-section {
   width: 100%;
   text-align: center;
-  margin-top: 10px;
-  margin-bottom: 25px;
-  margin: 20px 0; /* Even spacing between logo and cards */
+  margin: 25px 0; /* Balanced middle placement */
 }
 
 .choose-game {
   font-family: 'Chewy', cursive;
   font-size: 2.2rem;
-  color: #333; 
-  text-shadow: none; /* Shadow Removed */
+  color: #fff; /* White text to pop against the pink border */
+  /* This creates a thick pink "sticker" border effect */
+  text-shadow: 
+    -3px -3px 0 #ff7eb3,  
+     3px -3px 0 #ff7eb3,
+    -3px  3px 0 #ff7eb3,
+     3px  3px 0 #ff7eb3,
+     5px  5px 15px rgba(0,0,0,0.1); 
   animation: none;
 }
 
@@ -76,7 +83,7 @@ body {
   width: 100%;
   border-radius: 25px;
   padding: 18px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.15); /* Softer shadow for light bg */
+  box-shadow: 0 12px 35px rgba(0,0,0,0.12);
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -120,7 +127,6 @@ body {
   backdrop-filter: blur(10px);
   border: 2px solid rgba(255,255,255,0.5);
   
-  /* Horizontal Alignment Fix */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,7 +138,7 @@ body {
   font-weight: 700;
   color: #2c3e50;
   margin: 0;
-  white-space: nowrap; /* Keeps text in one line */
+  white-space: nowrap; 
 }
 
 /* --- Play Button --- */
@@ -161,7 +167,7 @@ body {
   cursor: not-allowed;
 }
 
-/* --- Footer (Shadows Removed) --- */
+/* --- Footer --- */
 .footer {
   text-align: center;
   padding: 20px 0;
@@ -171,7 +177,7 @@ body {
   font-size: 1rem;
   font-weight: 700;
   color: #555; 
-  text-shadow: none; /* Shadow Removed */
+  text-shadow: none; 
   background: rgba(255,255,255,0.6);
   padding: 12px 25px;
   border-radius: 30px;
