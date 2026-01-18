@@ -8,52 +8,63 @@
   box-sizing: border-box;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
   font-family: 'Fredoka', sans-serif;
-  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c, #ff9a56, #ffd93d);
+  background: linear-gradient(135deg,
+    #667eea 0%,
+    #764ba2 20%,
+    #f093fb 40%,
+    #f5576c 60%,
+    #ff9a56 80%,
+    #ffd93d 100%
+  );
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
-  padding: 0; /* Changed from 20px to 0 */
-  margin: 0;  /* Ensure no browser margin */
+  padding: 0 15px;   /* ⬅️ removed top padding */
   overflow-x: hidden;
 }
 
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Header Section */
 .header {
   text-align: center;
-  margin-bottom: 25px;
-  padding-top: 0; /* Ensure no top padding in header */
+  margin-bottom: 20px;
+  padding-top: 0;   /* ⬅️ remove top padding */
 }
 
 .logo {
-  display: block; /* Removes inline-block bottom gap */
   width: 100%;
   max-width: 380px;
   height: auto;
-  margin: 0 auto 12px auto; /* 0 margin on top */
+  margin: 0 auto 8px;   /* ⬅️ remove top margin completely */
+  display: block;
   filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
-  /* Optional: Remove animation if it's still making it bounce down */
-  /* animation: logoFloat 3s ease-in-out infinite; */
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 .tagline {
   font-family: 'Chewy', cursive;
   font-size: 1.5rem;
   font-weight: 700;
-  /* Removed Gradient Background & Animations */
-  color: #FFFFFF; 
-  -webkit-background-clip: initial;
-  -webkit-text-fill-color: initial;
-  background-clip: initial;
-  animation: none;
+  color: #ffffff;          /* ⬅️ solid color */
   line-height: 1.5;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.35);
   padding: 0 15px;
 }
 
