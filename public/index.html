@@ -1,75 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Meenit's Playzone</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Chewy&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meenit's Playzone - Play with Friends!</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  
   <div class="container">
-
-    <!-- HEADER -->
+    
+    <!-- Logo Section -->
     <header class="header">
-      <img src="images/meenit-logo.png" class="logo" alt="Meenit's Playzone"/>
-
-      <h1 class="tagline">
-        We were bored.<br/>
-        <span>I overreacted & made a game.</span>
-      </h1>
+      <img src="images/meenit-logo.png" alt="Meenit's Playzone" class="logo">
+      <h1 class="tagline">We were bored.<br>I overreacted and made a game.</h1>
     </header>
 
-    <!-- TITLE -->
-    <h2 class="choose-game">🎧 Choose Your Game 🎮</h2>
+    <!-- Choose Your Game Title -->
+    <section class="game-title-section">
+      <h2 class="choose-game">🎮 Choose Your Game 🎮</h2>
+    </section>
 
-    <!-- GAMES -->
+    <!-- Games Grid -->
     <main class="games-grid">
-
+      
       <!-- Odd One In -->
-      <div class="game-card pink">
-        <img src="images/odd-one-in-logo.png" class="game-logo"/>
-        <div class="info-row">
-          <div class="pill">⏱ 10 sec</div>
-          <div class="pill">👥 3 - ∞</div>
+      <div class="game-card card-pink" onclick="launchGame('odd-one-in')">
+        <div class="card-header">
+          <img src="images/odd-one-in-logo.png" alt="Odd One In" class="game-logo">
+        </div>
+        <div class="card-body">
+          <div class="info-box description-box">
+            <p>⏱️ 10 sec</p>
+          </div>
+          <div class="info-box players-box">
+            <p>👥 3 - ∞</p>
+          </div>
         </div>
         <button class="play-btn">
-          PLAY NOW <span>→</span>
+          <span>PLAY NOW</span>
+          <span class="arrow">→</span>
         </button>
       </div>
 
       <!-- Undercover -->
-      <div class="game-card cyan">
-        <img src="images/undercover-logo.png" class="game-logo"/>
-        <div class="info-row">
-          <div class="pill">🧠 Strategy</div>
-          <div class="pill">👥 4 - ∞</div>
+      <div class="game-card card-cyan" onclick="launchGame('undercover')">
+        <div class="card-header">
+          <img src="images/undercover-logo.png" alt="Undercover" class="game-logo">
         </div>
-        <button class="play-btn cyan-btn">
-          PLAY NOW <span>→</span>
+        <div class="card-body">
+          <div class="info-box description-box">
+            <p>🧠 Strategy</p>
+          </div>
+          <div class="info-box players-box">
+            <p>👥 4 - ∞</p>
+          </div>
+        </div>
+        <button class="play-btn">
+          <span>PLAY NOW</span>
+          <span class="arrow">→</span>
         </button>
       </div>
 
       <!-- Mafia -->
-      <div class="game-card gold">
-        <img src="images/mafia-logo.png" class="game-logo"/>
-        <div class="info-row">
-          <div class="pill">🎭 Deception</div>
-          <div class="pill">👥 5 - ∞</div>
+      <div class="game-card card-orange" onclick="launchGame('mafia')">
+        <div class="card-header">
+          <img src="images/mafia-logo.png" alt="Mafia" class="game-logo">
         </div>
-        <button class="play-btn disabled">
-          COMING SOON
+        <div class="card-body">
+          <div class="info-box description-box">
+            <p>🎭 Deception</p>
+          </div>
+          <div class="info-box players-box">
+            <p>👥 5 - ∞</p>
+          </div>
+        </div>
+        <button class="play-btn btn-disabled">
+          <span>COMING SOON</span>
+          <span class="arrow">🔒</span>
         </button>
       </div>
 
     </main>
 
+    <!-- Footer -->
     <footer class="footer">
-      Made with ❤️ by Meenit Doshi
+      <p>Made with ❤️ by Meenit Doshi</p>
     </footer>
 
   </div>
+
+  <script src="playground.js"></script>
 </body>
 </html>
