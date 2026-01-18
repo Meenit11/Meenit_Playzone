@@ -4,204 +4,179 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Odd One In - Meenit's Playzone</title>
-  <link rel="stylesheet" href="/games/odd-one-in/game-style.css">
+  <link rel="stylesheet" href="game-style.css">
 </head>
 <body>
-
-  <!-- ========== NAME ENTRY SCREEN ========== -->
-  <div id="nameScreen" class="screen active">
-    <div class="container">
-      <div class="game-logo-header">
-        <img src="/images/odd-one-in-logo.png" alt="Odd One In" class="main-game-logo">
+  
+  <div class="container">
+    
+    <!-- Name Screen -->
+    <div id="nameScreen" class="screen active">
+      <div class="logo-section">
+        <img src="../../public/images/meenit-logo.png" alt="Meenit's Playzone" class="main-logo">
+        <img src="../../public/images/odd-one-in-logo.png" alt="Odd One In" class="game-logo">
       </div>
       
-      <div class="entry-card">
-        <h2 class="entry-title">Enter Your Name</h2>
-        <input type="text" id="playerNameInput" placeholder="Your awesome name..." maxlength="20" autocomplete="off">
-        <button onclick="joinGame()" class="btn-primary">
-          <span>JOIN THE FUN!</span>
+      <div class="name-input-section">
+        <input type="text" id="playerNameInput" placeholder="Enter your name..." maxlength="20">
+        <button id="createJoinBtn" class="primary-btn">
+          <span id="btnText">Join Game</span>
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- ========== LOBBY SCREEN ========== -->
-  <div id="lobbyScreen" class="screen">
-    <div class="container">
-      
-      <!-- Header -->
-      <div class="lobby-header">
-        <img src="/images/odd-one-in-logo.png" alt="Odd One In" class="lobby-logo">
-        <button id="backBtn" onclick="backToHome()" class="btn-back" style="display: none;">← Home</button>
+    <!-- Lobby Screen -->
+    <div id="lobbyScreen" class="screen">
+      <div class="logo-section">
+        <img src="../../public/images/meenit-logo.png" alt="Meenit's Playzone" class="main-logo small">
+        <img src="../../public/images/odd-one-in-logo.png" alt="Odd One In" class="game-logo small">
       </div>
 
-      <!-- Invite Section (GM Only) -->
-      <div id="inviteSection" class="invite-card" style="display: none;">
-        <h3>📤 Share with Friends</h3>
-        <div class="invite-box">
-          <input type="text" id="inviteLink" readonly>
-          <button onclick="copyInvite()" class="btn-copy">📋 Copy</button>
+      <div class="lobby-content">
+        <div class="players-section">
+          <h2>Players in Lobby</h2>
+          <div id="playersList" class="players-list"></div>
+        </div>
+
+        <div id="gmControls" class="gm-controls hidden">
+          <div class="invite-section">
+            <label>Invite Link:</label>
+            <div class="invite-box">
+              <input type="text" id="inviteLink" readonly>
+              <button id="copyLinkBtn" class="icon-btn">📋</button>
+            </div>
+          </div>
+
+          <button id="startGameBtn" class="primary-btn">START GAME</button>
+          <button id="backHomeBtn" class="secondary-btn">Back to Home</button>
+        </div>
+
+        <div id="playerWaiting" class="player-waiting hidden">
+          <p>⏳ Waiting for GM to start the game...</p>
+        </div>
+
+        <div class="rules-section">
+          <h3>📜 Game Rules</h3>
+          <ul>
+            <li>Answer each question within the time limit</li>
+            <li>Try to match answers with other players</li>
+            <li>GM eliminates players with odd answers</li>
+            <li>Last player standing wins!</li>
+          </ul>
         </div>
       </div>
-
-      <!-- Players List -->
-      <div class="players-card">
-        <h3>👥 Players (<span id="playerCount">0</span>)</h3>
-        <div id="playerList" class="player-list"></div>
-      </div>
-
-      <!-- Rules -->
-      <div class="rules-card">
-        <h3>🎯 Game Rules</h3>
-        <div class="rules-list">
-          <div class="rule-item">
-            <span class="rule-icon">❓</span>
-            <div class="rule-text">
-              <strong>The Question:</strong> Host asks a simple question (e.g., "Name a Fruit")
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">⏱️</span>
-            <div class="rule-text">
-              <strong>10-Second Rule:</strong> You have exactly 10 seconds to type and send your answer
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">🚫</span>
-            <div class="rule-text">
-              <strong>Silence Penalty:</strong> No answer? You're eliminated!
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">❌</span>
-            <div class="rule-text">
-              <strong>Match Trap:</strong> Same answer as others? Everyone with that answer is OUT!
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">✅</span>
-            <div class="rule-text">
-              <strong>Survival Rule:</strong> Only unique answers survive to next round
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">🔒</span>
-            <div class="rule-text">
-              <strong>No Editing:</strong> Once sent, you cannot change your answer
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">🏆</span>
-            <div class="rule-text">
-              <strong>The Winner:</strong> Last person standing wins!
-            </div>
-          </div>
-          <div class="rule-item">
-            <span class="rule-icon">👑</span>
-            <div class="rule-text">
-              <strong>Host's Decision:</strong> Spelling mistakes OK if meaning is clear. Host's decision is final!
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Start Button (GM Only) -->
-      <button id="startBtn" onclick="startGame()" class="btn-start" style="display: none;">
-        🎮 START GAME
-      </button>
-      
-      <div id="waitingMsg" class="waiting-msg">
-        ⏳ Waiting for Game Master to start...
-      </div>
-
     </div>
-  </div>
 
-  <!-- ========== GAME SCREEN ========== -->
-  <div id="gameScreen" class="screen">
-    <div class="container">
+    <!-- Question Screen -->
+    <div id="questionScreen" class="screen">
+      <div class="logo-section">
+        <img src="../../public/images/odd-one-in-logo.png" alt="Odd One In" class="game-logo small">
+      </div>
 
-      <!-- Game Header -->
-      <div class="game-header">
-        <div class="game-stats">
-          <span class="stat-badge">Round <strong id="roundNum">1</strong></span>
-          <span class="stat-badge">Alive <strong id="activePlayers">0</strong></span>
+      <div class="question-content">
+        <div class="timer-section">
+          <div class="timer-circle">
+            <span id="timerDisplay">10</span>
+          </div>
         </div>
-        <div class="timer-circle" id="timerCircle">
-          <span id="timerNum">10</span>
+
+        <div class="question-box">
+          <h2 id="questionText">Question will appear here...</h2>
+        </div>
+
+        <div class="answer-section">
+          <input type="text" id="answerInput" placeholder="Type your answer..." maxlength="50">
+          <button id="submitAnswerBtn" class="primary-btn">SUBMIT</button>
+          <p id="answerStatus" class="answer-status hidden"></p>
+        </div>
+
+        <div id="gmGameControls" class="gm-game-controls hidden">
+          <button id="pauseBtn" class="control-btn">⏸ Pause</button>
+          <button id="resumeBtn" class="control-btn hidden">▶ Resume</button>
+          <button id="skipBtn" class="control-btn">⏭ Skip</button>
+          <button id="editBtn" class="control-btn">✏ Edit</button>
+          <button id="showAnswersBtn" class="control-btn">👀 Show Answers</button>
+          <button id="restartBtn" class="control-btn danger">🔁 Restart</button>
+        </div>
+
+        <div id="submissionCounter" class="submission-counter hidden">
+          <p>Submissions: <span id="submissionCount">0/0</span></p>
         </div>
       </div>
-
-      <!-- GM Controls (Only for Game Master) -->
-      <div id="gmControls" class="gm-panel" style="display: none;">
-        <button onclick="pauseTimer()" class="gm-btn" title="Pause Timer">⏸️</button>
-        <button onclick="resumeTimer()" class="gm-btn" title="Resume Timer">▶️</button>
-        <button onclick="skipQuestion()" class="gm-btn" title="Skip Question">⏭️</button>
-        <button onclick="editQuestion()" class="gm-btn" title="Edit Question">✏️</button>
-        <button onclick="resetGame()" class="gm-btn danger" title="Reset Game">🔄</button>
-      </div>
-
-      <!-- Question Card -->
-      <div class="question-card">
-        <h2 id="questionText">Get ready...</h2>
-      </div>
-
-      <!-- Answer Input Section -->
-      <div id="answerSection" class="answer-section">
-        <input type="text" id="answerInput" placeholder="Type your unique answer..." maxlength="50" autocomplete="off">
-        <button onclick="submitAnswer()" class="btn-submit">
-          <span>SUBMIT ANSWER</span>
-        </button>
-        <div id="answerStatus" class="answer-status"></div>
-      </div>
-
-      <!-- Answer Review Section (After timer ends) -->
-      <div id="reviewSection" class="review-section" style="display: none;">
-        <h3 class="review-title">📊 ROUND RESULTS</h3>
-        <div id="answerGroups"></div>
-        <div id="waitingNextRound" class="waiting-msg" style="display: none; margin-top: 20px;">
-        ⏳ Waiting for Game Master to start next round...
-        </div>
-        <button id="nextRoundBtn" onclick="nextRound()" class="btn-next" style="display: none;">
-          ▶️ NEXT ROUND
-        </button>
-      </div>
-
-      <!-- Eliminated Message -->
-      <div id="eliminatedMsg" class="eliminated-msg" style="display: none;">
-        <div class="eliminated-icon">💀</div>
-        <h2>YOU'RE ELIMINATED!</h2>
-        <p>Watch others battle it out...</p>
-        <p id="gmNote" style="display: none;">👑 But you still control the game as Host!</p>
-      </div>
-
     </div>
+
+    <!-- Review Screen -->
+    <div id="reviewScreen" class="screen">
+      <div class="logo-section">
+        <img src="../../public/images/odd-one-in-logo.png" alt="Odd One In" class="game-logo small">
+      </div>
+
+      <div class="review-content">
+        <h2 class="review-title">📋 Answers Revealed</h2>
+        
+        <div id="answersGrid" class="answers-grid"></div>
+
+        <div id="gmReviewControls" class="gm-review-controls hidden">
+          <button id="nextQuestionBtn" class="primary-btn">Next Question</button>
+        </div>
+
+        <div id="playerReviewWait" class="player-waiting hidden">
+          <p>⏳ Waiting for GM to continue...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Winner Screen -->
+    <div id="winnerScreen" class="screen">
+      <div class="logo-section">
+        <img src="../../public/images/odd-one-in-logo.png" alt="Odd One In" class="game-logo small">
+      </div>
+
+      <div class="winner-content">
+        <h1 class="winner-title">🎉 Winner! 🎉</h1>
+        <div class="winner-name-box">
+          <p id="winnerName">Champion</p>
+        </div>
+
+        <div id="gmWinnerControls" class="gm-winner-controls hidden">
+          <button id="playAgainBtn" class="primary-btn">Play Again</button>
+          <button id="homeBtn" class="secondary-btn">Back to Home</button>
+        </div>
+
+        <div id="playerWinnerWait" class="player-waiting hidden">
+          <p>⏳ Waiting for GM...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eliminated Screen -->
+    <div id="eliminatedScreen" class="screen">
+      <div class="logo-section">
+        <img src="../../public/images/odd-one-in-logo.png" alt="Odd One In" class="game-logo small">
+      </div>
+
+      <div class="eliminated-content">
+        <h1 class="eliminated-title">❌ You're Out! ❌</h1>
+        <p class="eliminated-message">Better luck next time!</p>
+        <p class="spectate-message">You can spectate the rest of the game</p>
+      </div>
+    </div>
+
   </div>
 
-  <!-- ========== WINNER SCREEN ========== -->
-  <div id="winnerScreen" class="screen">
-    <div class="container">
-      
-      <div class="winner-celebration">
-        <div class="confetti-rain">🎉✨🎊⭐🎉✨🎊⭐</div>
-        <h1 class="winner-title">GAME OVER!</h1>
-        <div id="winnerName" class="winner-name"></div>
+  <!-- Edit Question Modal -->
+  <div id="editModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Edit Question</h3>
+      <input type="text" id="editQuestionInput" placeholder="Enter new question...">
+      <div class="modal-buttons">
+        <button id="confirmEditBtn" class="primary-btn">Confirm</button>
+        <button id="cancelEditBtn" class="secondary-btn">Cancel</button>
       </div>
-
-      <div class="standings-card">
-        <h3>📊 Final Standings</h3>
-        <div id="standingsList"></div>
-      </div>
-
-      <div class="winner-actions">
-        <button onclick="playAgain()" class="btn-primary">🔄 PLAY AGAIN</button>
-        <button id="homeBtn" onclick="backToHome()" class="btn-secondary" style="display: none;">🏠 HOME</button>
-      </div>
-
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/games/odd-one-in/game.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>
