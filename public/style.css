@@ -57,7 +57,7 @@ body {
 .choose-game {
   font-family: 'Chewy', cursive;
   font-size: 2.2rem;
-  color: #fff; /* Main text color */
+  color: #FAF9F6; /* Main text color */
   /* Powder Blue, Pink, and Orange border effect */
   text-shadow: 
     -3px -3px 0 #B0E0E6,  /* Powder Blue (Top-Left) */
