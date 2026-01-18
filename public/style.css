@@ -4,6 +4,7 @@
 
 /* 1. Global Reset to eliminate white space */
 /* Global Reset */
+/* Global Reset */
 * {
   margin: 0;
   padding: 0;
@@ -12,17 +13,16 @@
 
 body {
   font-family: 'Fredoka', sans-serif;
-  /* Light & Bright Gradient */
-  background: linear-gradient(135deg, #E0C3FC 0%, #FBC2EB 50%, #A6C1EE 100%);
+  /* Light, Bright, and Cool Gradient */
+  background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+  /* Alternative Bright Option: background: linear-gradient(to top, #fff1eb 0%, #ace0f9 100%); */
   background-attachment: fixed;
   min-height: 100vh;
   
-  /* Centering Logic */
+  /* Perfect Center Alignment */
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centers horizontally */
-  
-  /* Remove top space */
+  align-items: center;
   padding: 0 15px 40px 15px; 
   overflow-x: hidden;
 }
@@ -32,15 +32,15 @@ body {
   max-width: 500px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Ensures children like logo and text are centered */
+  align-items: center;
 }
 
 /* Header Section */
 .header {
   width: 100%;
   text-align: center;
-  margin-bottom: 25px;
-  padding-top: 0;
+  margin-bottom: 20px;
+  padding-top: 0; /* Ensures logo touches the top */
 }
 
 .logo {
@@ -48,48 +48,51 @@ body {
   width: 100%;
   max-width: 380px;
   height: auto;
-  margin: 0 auto 12px auto; /* Centers the image */
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
-}
-
-.tagline {
-  font-family: 'Chewy', cursive;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #4A4A4A; /* Darker gray for better contrast on light bg */
-  line-height: 1.4;
-  text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
   margin: 0 auto;
-  max-width: 90%;
 }
 
-/* Choose Your Game Section */
+/* Choose Your Game Section - Shadows Removed */
 .game-title-section {
   width: 100%;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 10px;
   margin-bottom: 25px;
 }
 
 .choose-game {
   font-family: 'Chewy', cursive;
   font-size: 2.2rem;
-  color: #FFFFFF;
-  /* Outline effect to make white text pop on light bg */
-  text-shadow: 2px 2px 0px #FF7EB3, 4px 4px 10px rgba(0,0,0,0.1);
+  color: #333; /* Dark solid color for light bg */
+  text-shadow: none; /* Shadow Removed */
+  animation: none;   /* Removed bounce for a cleaner look */
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+/* Footer Section - Shadows Removed */
+.footer {
+  text-align: center;
+  padding: 20px 0;
+  width: 100%;
 }
 
-/* Games Grid */
+.footer p {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #555; /* Solid gray color */
+  text-shadow: none; /* Shadow Removed */
+  background: rgba(255,255,255,0.5); /* Semi-transparent clean box */
+  padding: 10px 20px;
+  border-radius: 30px;
+  display: inline-block;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Center the Games Grid */
 .games-grid {
+  width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
-  margin-bottom: 30px;
 }
 
 /* Game Cards - Compact with Gradients */
