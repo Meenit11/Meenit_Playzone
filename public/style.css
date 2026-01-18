@@ -66,15 +66,10 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: textGradient 5s ease infinite;
+  animation: none;
   line-height: 1.5;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
   padding: 0 15px;
-}
-
-@keyframes textGradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
 }
 
 /* Choose Your Game Section */
