@@ -8,38 +8,38 @@
   box-sizing: border-box;
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Fredoka', sans-serif;
   background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c, #ff9a56, #ffd93d);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
-  /* Removed top padding completely */
-  padding: 0 15px 20px 15px; 
-  margin: 0;
+  padding: 0; /* Changed from 20px to 0 */
+  margin: 0;  /* Ensure no browser margin */
   overflow-x: hidden;
 }
 
-.container {
-  max-width: 500px;
-  margin: 0 auto; /* Keeps it centered horizontally, but 0 on top */
-}
-
-/* Header Section */
 .header {
   text-align: center;
   margin-bottom: 25px;
-  padding-top: 0; /* Ensures no internal padding */
+  padding-top: 0; /* Ensure no top padding in header */
 }
 
 .logo {
-  display: block; /* Removes any baseline inline spacing */
+  display: block; /* Removes inline-block bottom gap */
   width: 100%;
   max-width: 380px;
   height: auto;
-  margin: 0 auto 12px auto; /* Force 0 margin at the top */
+  margin: 0 auto 12px auto; /* 0 margin on top */
   filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
-  animation: logoFloat 3s ease-in-out infinite;
+  /* Optional: Remove animation if it's still making it bounce down */
+  /* animation: logoFloat 3s ease-in-out infinite; */
 }
 
 .tagline {
