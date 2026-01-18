@@ -2,6 +2,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
+/* 1. Global Reset to eliminate white space */
 * {
   margin: 0;
   padding: 0;
@@ -10,75 +11,57 @@
 
 body {
   font-family: 'Fredoka', sans-serif;
-  background: linear-gradient(135deg,
-    #667eea 0%,
-    #764ba2 20%,
-    #f093fb 40%,
-    #f5576c 60%,
-    #ff9a56 80%,
-    #ffd93d 100%
+  /* Cool Static Gradient: Deep Blue -> Purple -> Soft Pink */
+  background: linear-gradient(135deg, 
+    #4158D0 0%, 
+    #C850C0 46%, 
+    #FFCC70 100%
   );
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
+  background-attachment: fixed; /* Keeps bg steady while scrolling */
   min-height: 100vh;
-  padding: 20px 15px;
+  padding: 0 15px 20px 15px; /* Zero top padding */
   overflow-x: hidden;
 }
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.container {
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-/* Header Section */
+/* 2. Header Fixes */
 .header {
   text-align: center;
   margin-bottom: 25px;
-  padding-top: 10px;
+  padding-top: 0; /* Ensures logo touches the very top */
 }
 
 .logo {
+  display: block; 
   width: 100%;
   max-width: 380px;
   height: auto;
-  margin-bottom: 12px;
-  filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
-  animation: logoFloat 3s ease-in-out infinite;
-}
-
-@keyframes logoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  margin: 0 auto 12px auto; /* Force 0 margin at top */
+  filter: drop-shadow(0 12px 35px rgba(0,0,0,0.3));
+  /* Removed animation to keep it flush at the top */
 }
 
 .tagline {
   font-family: 'Chewy', cursive;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #ffffff; /* Solid White */
+  background: none; /* No gradient */
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: initial;
   animation: none;
   line-height: 1.5;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
   padding: 0 15px;
 }
 
-/* Choose Your Game Section */
-.game-title-section {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
+/* 3. Game Section Adjustments */
 .choose-game {
   font-family: 'Chewy', cursive;
   font-size: 2rem;
   font-weight: 700;
   color: #fff;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  /* Optional: remove bounce if you want a completely static look */
   animation: bounce 2s ease-in-out infinite;
 }
 
