@@ -1,4 +1,4 @@
-// Odd One In - Game Logic
+// Odd One In - Enhanced Game Logic
 
 const socket = io();
 
@@ -66,28 +66,39 @@ function joinGame() {
 }
 
 function backToHome() {
-  window.location.href = '/';
+  if (confirm('Are you sure you want to leave the game?')) {
+    window.location.href = '/';
+  }
 }
 
 function copyInvite() {
   const inviteLink = document.getElementById('inviteLink');
   inviteLink.select();
   inviteLink.setSelectionRange(0, 99999);
-  document.execCommand('copy');
   
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.textContent = '✅ Copied!';
-  btn.style.background = '#4CAF50';
-  
-  setTimeout(() => {
-    btn.textContent = originalText;
-    btn.style.background = '';
-  }, 2000);
+  try {
+    document.execCommand('copy');
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    btn.style.background = '#4CAF50';
+    
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.background = '';
+    }, 2000);
+  } catch (err) {
+    alert('Failed to copy. Please copy manually.');
+  }
 }
 
 // ========== GAME CONTROLS ==========
 function startGame() {
+  const playerCount = document.querySelectorAll('.player-item').length;
+  if (playerCount < 3) {
+    alert('Need at least 3 players to start!');
+    return;
+  }
   socket.emit('startGame', { roomId: currentRoomId });
 }
 
@@ -116,14 +127,15 @@ function resumeTimer() {
 }
 
 function skipQuestion() {
-  if (confirm('Skip this question?')) {
+  if (confirm('Skip this question and move to next round?')) {
     socket.emit('skipQuestion', currentRoomId);
   }
 }
 
 function editQuestion() {
-  const newQuestion = prompt('Enter new question:');
-  if (newQuestion && newQuestion.trim()) {
+  const currentQuestion = document.getElementById('questionText').textContent;
+  const newQuestion = prompt('Enter new question:', currentQuestion);
+  if (newQuestion && newQuestion.trim() && newQuestion !== currentQuestion) {
     socket.emit('editQuestion', {
       roomId: currentRoomId,
       newQuestion: newQuestion.trim()
@@ -132,16 +144,18 @@ function editQuestion() {
 }
 
 function resetGame() {
-  if (confirm('Reset the entire game? All progress will be lost.')) {
+  if (confirm('Reset the entire game? All progress will be lost and everyone will return to the lobby.')) {
     socket.emit('resetGame', currentRoomId);
   }
 }
 
 function eliminatePlayer(playerId) {
-  socket.emit('eliminatePlayer', {
-    roomId: currentRoomId,
-    playerId: playerId
-  });
+  if (confirm('Eliminate this player?')) {
+    socket.emit('eliminatePlayer', {
+      roomId: currentRoomId,
+      playerId: playerId
+    });
+  }
 }
 
 function nextRound() {
@@ -158,12 +172,25 @@ socket.on('roomJoined', (data) => {
   isGameMaster = data.isGameMaster;
   showScreen('lobbyScreen');
   
+  // Show/hide back button based on GM status
+  const backHomeBtn = document.getElementById('backHomeBtn');
+  if (backHomeBtn) {
+    backHomeBtn.style.display = isGameMaster ? 'block' : 'none';
+  }
+  
   if (isGameMaster) {
     document.getElementById('inviteSection').style.display = 'block';
     const inviteLink = `${window.location.origin}/odd-one-in?room=${data.roomId}`;
     document.getElementById('inviteLink').value = inviteLink;
     document.getElementById('startBtn').style.display = 'block';
     document.getElementById('waitingMsg').style.display = 'none';
+  }
+  
+  if (data.gameStarted) {
+    showScreen('gameScreen');
+    if (isGameMaster) {
+      document.getElementById('gmControls').style.display = 'flex';
+    }
   }
 });
 
@@ -191,18 +218,28 @@ socket.on('playerListUpdate', (data) => {
       nameSpan.appendChild(badge);
     }
     
+    if (player.eliminated) {
+      const eliminatedBadge = document.createElement('span');
+      eliminatedBadge.style.marginLeft = '10px';
+      eliminatedBadge.style.color = '#f44336';
+      eliminatedBadge.textContent = '💀 OUT';
+      nameSpan.appendChild(eliminatedBadge);
+    }
+    
     nameDiv.appendChild(nameSpan);
     item.appendChild(nameDiv);
     
-    if (isGameMaster && player.id !== socket.id) {
+    if (isGameMaster && player.id !== socket.id && !player.eliminated) {
       const removeBtn = document.createElement('button');
       removeBtn.className = 'btn-remove';
-      removeBtn.textContent = '❌';
+      removeBtn.textContent = '❌ Kick';
       removeBtn.onclick = () => {
-        socket.emit('removePlayer', {
-          roomId: currentRoomId,
-          playerId: player.id
-        });
+        if (confirm(`Remove ${player.name} from the game?`)) {
+          socket.emit('removePlayer', {
+            roomId: currentRoomId,
+            playerId: player.id
+          });
+        }
       };
       item.appendChild(removeBtn);
     }
@@ -240,6 +277,7 @@ socket.on('gameStarted', (data) => {
   answerInput.disabled = true;
   
   document.getElementById('answerStatus').textContent = '';
+  document.getElementById('answerStatus').className = 'answer-status';
   document.getElementById('reviewSection').style.display = 'none';
   document.getElementById('eliminatedMsg').style.display = 'none';
   document.getElementById('answerSection').style.display = 'block';
@@ -259,11 +297,15 @@ socket.on('timerUpdate', (data) => {
 });
 
 socket.on('timerPaused', () => {
-  document.getElementById('timerCircle').style.opacity = '0.5';
+  const timerCircle = document.getElementById('timerCircle');
+  timerCircle.style.opacity = '0.5';
+  timerCircle.style.filter = 'grayscale(1)';
 });
 
 socket.on('timerResumed', () => {
-  document.getElementById('timerCircle').style.opacity = '1';
+  const timerCircle = document.getElementById('timerCircle');
+  timerCircle.style.opacity = '1';
+  timerCircle.style.filter = 'grayscale(0)';
 });
 
 socket.on('questionUpdated', (data) => {
@@ -282,6 +324,7 @@ socket.on('answerSubmitted', (data) => {
 socket.on('roundEnded', (data) => {
   document.getElementById('answerSection').style.display = 'none';
   document.getElementById('reviewSection').style.display = 'block';
+  document.getElementById('timerNum').textContent = '⏰';
   
   displayAnswerGroups(data.answerGroups);
   
@@ -300,6 +343,30 @@ socket.on('playerEliminated', (data) => {
       document.getElementById('gmNote').style.display = 'block';
     }
   }
+  
+  // Show notification for all players
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(244,67,54,0.95);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 15px;
+    font-weight: 700;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: slideDown 0.5s ease;
+  `;
+  notification.textContent = `💀 ${data.playerName} has been eliminated!`;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideUp 0.5s ease';
+    setTimeout(() => notification.remove(), 500);
+  }, 3000);
 });
 
 socket.on('nextRound', (data) => {
@@ -312,6 +379,7 @@ socket.on('nextRound', (data) => {
   answerInput.disabled = true;
   
   document.getElementById('answerStatus').textContent = '';
+  document.getElementById('answerStatus').className = 'answer-status';
   document.getElementById('reviewSection').style.display = 'none';
   
   if (!isEliminated) {
@@ -329,6 +397,12 @@ socket.on('gameEnded', (data) => {
     winnerName.textContent = '🤝 NO WINNER - TIE! 🤝';
   }
   
+  // Show home button for GM only on winner screen
+  const winnerHomeBtn = document.getElementById('winnerHomeBtn');
+  if (winnerHomeBtn) {
+    winnerHomeBtn.style.display = isGameMaster ? 'inline-block' : 'none';
+  }
+  
   displayStandings(data.players);
 });
 
@@ -336,11 +410,30 @@ socket.on('gameReset', () => {
   showScreen('lobbyScreen');
   isEliminated = false;
   
+  // Reset all game elements
   document.getElementById('answerInput').value = '';
   document.getElementById('answerInput').disabled = false;
   document.getElementById('answerStatus').textContent = '';
+  document.getElementById('answerStatus').className = 'answer-status';
   document.getElementById('reviewSection').style.display = 'none';
   document.getElementById('eliminatedMsg').style.display = 'none';
+  document.getElementById('timerNum').textContent = '10';
+  document.getElementById('questionText').textContent = 'Get ready...';
+  document.getElementById('answerSection').style.display = 'block';
+  
+  const timerCircle = document.getElementById('timerCircle');
+  timerCircle.classList.remove('warning');
+  timerCircle.style.opacity = '1';
+  timerCircle.style.filter = 'grayscale(0)';
+});
+
+socket.on('connect_error', (error) => {
+  console.error('Connection error:', error);
+  alert('Connection error. Please refresh the page.');
+});
+
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
 });
 
 // ========== HELPER FUNCTIONS ==========
@@ -358,7 +451,10 @@ function updateTimer(timeLeft) {
   }
   
   if (timeLeft === 0) {
-    document.getElementById('answerInput').disabled = true;
+    const answerInput = document.getElementById('answerInput');
+    if (answerInput) {
+      answerInput.disabled = true;
+    }
     timerNum.textContent = '⏰';
   }
 }
@@ -367,20 +463,24 @@ function displayAnswerGroups(groups) {
   const container = document.getElementById('answerGroups');
   container.innerHTML = '';
   
-  // Display duplicates
+  // Display duplicates first (eliminated)
   if (groups.duplicates && groups.duplicates.length > 0) {
     const duplicatesSection = document.createElement('div');
     duplicatesSection.className = 'answer-group duplicates';
-    duplicatesSection.innerHTML = '<h4>🚨 DUPLICATE ANSWERS</h4>';
+    
+    const header = document.createElement('h4');
+    header.textContent = '🚨 DUPLICATE ANSWERS - ELIMINATED!';
+    header.style.color = '#f44336';
+    duplicatesSection.appendChild(header);
     
     groups.duplicates.forEach(group => {
       const groupLabel = document.createElement('div');
       groupLabel.className = 'group-label';
-      groupLabel.innerHTML = `<strong>"${group.answer}"</strong> - ${group.count} players`;
+      groupLabel.innerHTML = `<strong>"${group.answer}"</strong> - ${group.count} players matched`;
       duplicatesSection.appendChild(groupLabel);
       
       group.players.forEach(player => {
-        const item = createAnswerItem(player);
+        const item = createAnswerItem(player, true);
         duplicatesSection.appendChild(item);
       });
     });
@@ -388,37 +488,78 @@ function displayAnswerGroups(groups) {
     container.appendChild(duplicatesSection);
   }
   
-  // Display unique answers
+  // Display unique answers (safe)
   if (groups.unique && groups.unique.length > 0) {
     const uniqueSection = document.createElement('div');
     uniqueSection.className = 'answer-group unique';
-    uniqueSection.innerHTML = '<h4>✅ UNIQUE ANSWERS</h4>';
+    
+    const header = document.createElement('h4');
+    header.textContent = '✅ UNIQUE ANSWERS - SAFE!';
+    header.style.color = '#4CAF50';
+    uniqueSection.appendChild(header);
     
     groups.unique.forEach(player => {
-      const item = createAnswerItem(player);
+      const item = createAnswerItem(player, false);
       uniqueSection.appendChild(item);
     });
     
     container.appendChild(uniqueSection);
   }
+  
+  // Display players who didn't answer
+  if (groups.noAnswer && groups.noAnswer.length > 0) {
+    const noAnswerSection = document.createElement('div');
+    noAnswerSection.className = 'answer-group duplicates';
+    
+    const header = document.createElement('h4');
+    header.textContent = '🤐 NO ANSWER - ELIMINATED!';
+    header.style.color = '#ff9800';
+    noAnswerSection.appendChild(header);
+    
+    groups.noAnswer.forEach(player => {
+      const item = document.createElement('div');
+      item.className = 'answer-item';
+      item.style.opacity = '0.7';
+      
+      const textSpan = document.createElement('span');
+      textSpan.className = 'answer-text';
+      textSpan.textContent = `${player.playerName}: (No answer)`;
+      textSpan.style.color = '#ff9800';
+      item.appendChild(textSpan);
+      
+      noAnswerSection.appendChild(item);
+    });
+    
+    container.appendChild(noAnswerSection);
+  }
 }
 
-function createAnswerItem(player) {
+function createAnswerItem(player, isDuplicate) {
   const item = document.createElement('div');
   item.className = 'answer-item';
   
   const textSpan = document.createElement('span');
   textSpan.className = 'answer-text';
   textSpan.textContent = `${player.playerName}: "${player.answer}"`;
+  
+  if (isDuplicate) {
+    textSpan.style.textDecoration = 'line-through';
+    textSpan.style.color = '#f44336';
+  } else {
+    textSpan.style.color = '#4CAF50';
+  }
+  
   item.appendChild(textSpan);
   
+  // GM can manually eliminate/save players
   if (isGameMaster) {
     const actions = document.createElement('div');
     actions.className = 'answer-actions';
     
     const eliminateBtn = document.createElement('button');
     eliminateBtn.className = 'btn-eliminate';
-    eliminateBtn.textContent = '❌';
+    eliminateBtn.textContent = '❌ Eliminate';
+    eliminateBtn.title = 'Host override: Eliminate this player';
     eliminateBtn.onclick = () => eliminatePlayer(player.playerId);
     
     actions.appendChild(eliminateBtn);
@@ -432,6 +573,7 @@ function displayStandings(players) {
   const container = document.getElementById('standingsList');
   container.innerHTML = '';
   
+  // Sort: Winners first, then eliminated
   const sorted = [...players].sort((a, b) => {
     if (a.eliminated === b.eliminated) {
       return a.name.localeCompare(b.name);
@@ -444,17 +586,28 @@ function displayStandings(players) {
     item.className = 'standing-item';
     
     let medal = '';
-    if (!player.eliminated && index === 0) medal = '🥇 ';
-    else if (index === 1) medal = '🥈 ';
-    else if (index === 2) medal = '🥉 ';
-    else medal = `${index + 1}. `;
+    const activeIndex = sorted.filter(p => !p.eliminated).indexOf(player);
+    
+    if (!player.eliminated) {
+      if (activeIndex === 0) medal = '🥇 ';
+      else if (activeIndex === 1) medal = '🥈 ';
+      else if (activeIndex === 2) medal = '🥉 ';
+      else medal = `${activeIndex + 1}. `;
+    } else {
+      medal = `${index + 1}. `;
+    }
     
     const status = player.eliminated ? '❌ Eliminated' : '✅ Winner';
     
-    item.innerHTML = `
-      <span>${medal}${player.name}${player.isGameMaster ? ' 👑' : ''}</span>
-      <span>${status}</span>
-    `;
+    const leftSide = document.createElement('span');
+    leftSide.textContent = `${medal}${player.name}${player.isGameMaster ? ' 👑' : ''}`;
+    
+    const rightSide = document.createElement('span');
+    rightSide.textContent = status;
+    rightSide.style.color = player.eliminated ? '#f44336' : '#4CAF50';
+    
+    item.appendChild(leftSide);
+    item.appendChild(rightSide);
     
     container.appendChild(item);
   });
