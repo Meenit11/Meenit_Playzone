@@ -1,4 +1,4 @@
-/* Odd One In - Game Styles */
+/* Odd One In - Enhanced Game Styles */
 
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;800&family=Chewy&display=swap');
 
@@ -11,17 +11,19 @@
 body {
   font-family: 'Fredoka', sans-serif;
   background: linear-gradient(135deg, 
-    #667eea 0%, 
-    #764ba2 25%, 
-    #f093fb 50%, 
-    #f5576c 75%, 
-    #ffd93d 100%
+    #FF6B9D 0%,
+    #FFB347 20%,
+    #FFD93D 40%,
+    #48DBFB 60%,
+    #667EEA 80%,
+    #F093FB 100%
   );
   background-size: 400% 400%;
-  animation: gradientFlow 15s ease infinite;
+  animation: gradientFlow 20s ease infinite;
   min-height: 100vh;
   color: #fff;
   overflow-x: hidden;
+  position: relative;
 }
 
 @keyframes gradientFlow {
@@ -30,10 +32,34 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+/* Floating particles background */
+body::before {
+  content: '🎮 🎯 ⭐ 🎪 🎲 🎨 🎭 🎸 🎺 🎻';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 2rem;
+  opacity: 0.15;
+  animation: floatParticles 30s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+  word-spacing: 100px;
+  line-height: 150px;
+}
+
+@keyframes floatParticles {
+  0% { transform: translateY(100vh) rotate(0deg); }
+  100% { transform: translateY(-100vh) rotate(360deg); }
+}
+
 .container {
   max-width: 500px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .screen {
@@ -183,6 +209,12 @@ body {
 .lobby-logo {
   width: 120px;
   filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 .btn-back {
@@ -272,6 +304,12 @@ body {
   border-radius: 12px;
   border-left: 4px solid #2196F3;
   transition: all 0.3s;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .player-item.eliminated {
@@ -312,22 +350,49 @@ body {
   transform: scale(0.95);
 }
 
-/* Rules Grid */
-.rules-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+/* Rules List - Enhanced */
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.rule-badge {
+.rule-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
   padding: 12px;
-  background: linear-gradient(135deg, #f093fb, #f5576c);
-  color: white;
+  background: linear-gradient(135deg, rgba(255,107,157,0.1), rgba(72,219,251,0.1));
   border-radius: 12px;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  box-shadow: 0 4px 15px rgba(245,87,108,0.3);
+  border-left: 4px solid #f5576c;
+  transition: all 0.3s;
+}
+
+.rule-item:hover {
+  transform: translateX(5px);
+  background: linear-gradient(135deg, rgba(255,107,157,0.2), rgba(72,219,251,0.2));
+}
+
+.rule-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.rule-text {
+  color: #2c3e50;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.rule-text strong {
+  color: #f5576c;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.rule-item.host-note {
+  border-left-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,237,78,0.2));
 }
 
 .btn-start {
@@ -346,8 +411,8 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(56,239,125,0.4); }
+  50% { transform: scale(1.03); box-shadow: 0 15px 40px rgba(56,239,125,0.6); }
 }
 
 .waiting-msg {
@@ -358,6 +423,12 @@ body {
   border-radius: 15px;
   font-size: 1.1rem;
   font-weight: 700;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* ========== GAME SCREEN ========== */
@@ -425,10 +496,11 @@ body {
   justify-content: center;
   margin-bottom: 20px;
   padding: 15px;
-  background: rgba(255,215,0,0.2);
+  background: rgba(255,215,0,0.3);
   backdrop-filter: blur(10px);
   border-radius: 15px;
-  border: 2px solid rgba(255,215,0,0.5);
+  border: 2px solid rgba(255,215,0,0.6);
+  box-shadow: 0 8px 20px rgba(255,215,0,0.3);
 }
 
 .gm-btn {
@@ -535,6 +607,13 @@ body {
   background: rgba(76,175,80,0.2);
   color: #2e7d32;
   border: 2px solid #4CAF50;
+  animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(0.9); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 /* Review Section */
@@ -556,6 +635,12 @@ body {
   padding: 20px;
   margin-bottom: 15px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: slideInUp 0.4s ease;
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .answer-group.duplicates {
@@ -576,6 +661,7 @@ body {
   color: #666;
   font-size: 0.95rem;
   margin-bottom: 10px;
+  font-weight: 600;
 }
 
 .answer-item {
@@ -692,11 +778,11 @@ body {
 }
 
 @keyframes rainbow {
-  0% { color: #f093fb; }
-  25% { color: #f5576c; }
-  50% { color: #ffd93d; }
-  75% { color: #4CAF50; }
-  100% { color: #f093fb; }
+  0% { color: #f093fb; text-shadow: 0 0 20px #f093fb; }
+  25% { color: #f5576c; text-shadow: 0 0 20px #f5576c; }
+  50% { color: #ffd93d; text-shadow: 0 0 20px #ffd93d; }
+  75% { color: #4CAF50; text-shadow: 0 0 20px #4CAF50; }
+  100% { color: #f093fb; text-shadow: 0 0 20px #f093fb; }
 }
 
 .winner-name {
@@ -707,6 +793,12 @@ body {
   color: #333;
   border-radius: 20px;
   box-shadow: 0 15px 40px rgba(255,215,0,0.5);
+  animation: winnerBounce 1s ease infinite;
+}
+
+@keyframes winnerBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .standings-card {
@@ -760,5 +852,17 @@ body {
   
   .winner-title {
     font-size: 2rem;
+  }
+  
+  .rule-item {
+    padding: 10px;
+  }
+  
+  .rule-icon {
+    font-size: 1.3rem;
+  }
+  
+  .rule-text {
+    font-size: 0.85rem;
   }
 }
