@@ -11,10 +11,7 @@
 body {
   font-family: 'Fredoka', sans-serif;
   /* Light, Bright, and Modern Gradient */
-  background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-  
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   /* Perfect Center Alignment */
   display: flex;
   flex-direction: column;
@@ -47,10 +44,12 @@ body {
   margin: 0 auto;
 }
 
-/* --- Choose Your Game (Balanced in Middle) --- */
+/* Choose Your Game Section - Shadows Removed */
 .game-title-section {
   width: 100%;
   text-align: center;
+  margin-top: 10px;
+  margin-bottom: 25px;
   margin: 20px 0; /* Even spacing between logo and cards */
 }
 
