@@ -88,9 +88,13 @@ io.on('connection', (socket) => {
     rooms.set(roomId, room);
     socket.join(roomId);
     
+    // Generate invite link - use environment variable or localhost
+    const baseUrl = process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+    const inviteLink = `${baseUrl}/odd-one-in?room=${roomId}`;
+    
     socket.emit('roomCreated', { 
       roomId, 
-      inviteLink: `${req.headers.host || 'localhost:3000'}/odd-one-in?room=${roomId}` 
+      inviteLink 
     });
     
     io.to(roomId).emit('updatePlayers', room.players);
