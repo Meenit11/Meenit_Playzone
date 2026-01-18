@@ -612,4 +612,14 @@ function createConfetti() {
 }
 
 // ========== START ==========
-init();
+function startGame() {
+  console.log('Start Game clicked!');
+  console.log('Room ID:', gameState.roomId);
+  
+  if (!gameState.roomId) {
+    alert('Error: Room ID not found');
+    return;
+  }
+  
+  socket.emit('startGame', { roomId: gameState.roomId });
+}
