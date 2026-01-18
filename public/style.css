@@ -44,28 +44,29 @@ body {
 /* Header Section */
 .header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding-top: 0;   /* ⬅️ remove top padding */
 }
 
 .logo {
   width: 100%;
-  max-width: 380px;
-  height: auto;
-  margin: 0 auto 8px;   /* ⬅️ remove top margin completely */
+  max-width: 320px;   /* slightly smaller on mobile */
+  margin: 0 auto 4px; /* ⬅️ VERY IMPORTANT */
   display: block;
-  filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
-  animation: logoFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.35));
+  animation: none; /* REMOVE float for header */
 }
 
 .tagline {
-  font-family: 'Chewy', cursive;
-  font-size: 1.5rem;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;          /* ⬅️ solid color */
-  line-height: 1.5;
-  text-shadow: 3px 3px 6px rgba(0,0,0,0.35);
-  padding: 0 15px;
+  color: #ffffff;
+  opacity: 0.9;
+  margin-top: 2px;
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
 
 /* Choose Your Game Section */
