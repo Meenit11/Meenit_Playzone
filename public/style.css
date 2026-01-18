@@ -1,10 +1,7 @@
-/* Meenit's Playzone - Enhanced Mobile Design */
+/* Meenit's Playzone - Clean & Bright Design */
 
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
-/* 1. Global Reset to eliminate white space */
-/* Global Reset */
-/* Global Reset */
 * {
   margin: 0;
   padding: 0;
@@ -13,9 +10,8 @@
 
 body {
   font-family: 'Fredoka', sans-serif;
-  /* Light, Bright, and Cool Gradient */
+  /* Light, Bright, and Modern Gradient */
   background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
-  /* Alternative Bright Option: background: linear-gradient(to top, #fff1eb 0%, #ace0f9 100%); */
   background-attachment: fixed;
   min-height: 100vh;
   
@@ -35,12 +31,12 @@ body {
   align-items: center;
 }
 
-/* Header Section */
+/* --- Header & Logo --- */
 .header {
   width: 100%;
   text-align: center;
-  margin-bottom: 20px;
-  padding-top: 0; /* Ensures logo touches the top */
+  margin-bottom: 0; /* Removed margin to pull title closer */
+  padding-top: 0; 
 }
 
 .logo {
@@ -51,125 +47,47 @@ body {
   margin: 0 auto;
 }
 
-/* Choose Your Game Section - Shadows Removed */
+/* --- Choose Your Game (Balanced in Middle) --- */
 .game-title-section {
   width: 100%;
   text-align: center;
-  margin-top: 10px;
-  margin-bottom: 25px;
+  margin: 20px 0; /* Even spacing between logo and cards */
 }
 
 .choose-game {
   font-family: 'Chewy', cursive;
   font-size: 2.2rem;
-  color: #333; /* Dark solid color for light bg */
+  color: #333; 
   text-shadow: none; /* Shadow Removed */
-  animation: none;   /* Removed bounce for a cleaner look */
+  animation: none;
 }
 
-/* Footer Section - Shadows Removed */
-.footer {
-  text-align: center;
-  padding: 20px 0;
-  width: 100%;
-}
-
-.footer p {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #555; /* Solid gray color */
-  text-shadow: none; /* Shadow Removed */
-  background: rgba(255,255,255,0.5); /* Semi-transparent clean box */
-  padding: 10px 20px;
-  border-radius: 30px;
-  display: inline-block;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-
-/* Center the Games Grid */
+/* --- Games Grid --- */
 .games-grid {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  margin-bottom: 30px;
 }
 
-/* Game Cards - Compact with Gradients */
+/* --- Game Cards --- */
 .game-card {
+  width: 100%;
   border-radius: 25px;
   padding: 18px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.15); /* Softer shadow for light bg */
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  background-size: 200% 200%;
-  animation: cardGradient 8s ease infinite;
 }
 
-@keyframes cardGradient {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
+.card-pink { background: linear-gradient(135deg, #FFB6C1, #FFF0F5); }
+.card-cyan { background: linear-gradient(135deg, #48DBFB, #E0F7FA); }
+.card-orange { background: linear-gradient(135deg, #FFB347, #FFF5E6); }
 
-.card-pink {
-  background: linear-gradient(135deg,
-    #FFB6C1 0%,
-    #FFD1DC 25%,
-    #FFE4E1 50%,
-    #FFF0F5 75%,
-    #FFB6C1 100%
-  );
-}
-
-.card-cyan {
-  background: linear-gradient(135deg,
-    #48DBFB 0%,
-    #7FDBFF 25%,
-    #B4E7F5 50%,
-    #E0F7FA 75%,
-    #48DBFB 100%
-  );
-}
-
-.card-orange {
-  background: linear-gradient(135deg,
-    #FFB347 0%,
-    #FFD280 25%,
-    #FFE4B5 50%,
-    #FFF5E6 75%,
-    #FFB347 100%
-  );
-}
-
-.game-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, 
-    transparent 30%,
-    rgba(255,255,255,0.4) 50%,
-    transparent 70%
-  );
-  transform: rotate(45deg);
-  animation: shine 3s infinite;
-}
-
-@keyframes shine {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
-}
-
-.game-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.35);
-}
-
-/* Card Header - Logo */
 .card-header {
   text-align: center;
   margin-bottom: 12px;
@@ -179,12 +97,11 @@ body {
   width: 100%;
   max-width: 180px;
   height: auto;
-  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
   position: relative;
   z-index: 2;
 }
 
-/* Card Body - Boxes Side by Side */
+/* --- Info Box (Side-by-Side Fix) --- */
 .card-body {
   display: flex;
   justify-content: space-between;
@@ -197,22 +114,18 @@ body {
   flex: 1;
   padding: 10px 12px;
   border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   position: relative;
   z-index: 2;
   backdrop-filter: blur(10px);
   border: 2px solid rgba(255,255,255,0.5);
-}
-
-.description-box {
-  background: rgba(255, 255, 255, 0.85);
-}
-
-.players-box {
-  background: rgba(255, 255, 255, 0.85);
-  flex-shrink: 0;
-  min-width: 90px;
+  
+  /* Horizontal Alignment Fix */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .info-box p {
@@ -220,9 +133,10 @@ body {
   font-weight: 700;
   color: #2c3e50;
   margin: 0;
+  white-space: nowrap; /* Keeps text in one line */
 }
 
-/* Play Button with Arrow */
+/* --- Play Button --- */
 .play-btn {
   width: 100%;
   padding: 14px 20px;
@@ -232,166 +146,52 @@ body {
   border-radius: 15px;
   color: white;
   background: linear-gradient(135deg, #f093fb, #f5576c);
-  cursor: pointer;
   font-family: 'Fredoka', sans-serif;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  box-shadow: 0 8px 20px rgba(245,87,108,0.5);
-  transition: all 0.2s ease;
+  letter-spacing: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   position: relative;
   z-index: 2;
-  overflow: hidden;
-}
-
-.play-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: rgba(255,255,255,0.3);
-  transition: left 0.5s;
-}
-
-.play-btn:active::before {
-  left: 100%;
-}
-
-.play-btn:active {
-  transform: scale(0.97);
-}
-
-.arrow {
-  font-size: 1.4rem;
-  transition: transform 0.3s;
-}
-
-.play-btn:active .arrow {
-  transform: translateX(5px);
 }
 
 .btn-disabled {
   background: linear-gradient(135deg, #95a5a6, #7f8c8d);
   cursor: not-allowed;
-  opacity: 0.8;
 }
 
-.btn-disabled:active {
-  transform: none;
-}
-
-.btn-disabled:active .arrow {
-  transform: none;
-}
-
-/* Footer */
+/* --- Footer (Shadows Removed) --- */
 .footer {
   text-align: center;
-  padding: 15px 0;
+  padding: 20px 0;
 }
 
 .footer p {
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-  background: rgba(255,255,255,0.2);
+  color: #555; 
+  text-shadow: none; /* Shadow Removed */
+  background: rgba(255,255,255,0.6);
   padding: 12px 25px;
   border-radius: 30px;
   display: inline-block;
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255,255,255,0.4);
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Tablet and Desktop */
+/* --- Responsive Adjustments --- */
 @media (min-width: 768px) {
-  .container {
-    max-width: 1200px;
-  }
-
-  .logo {
-    max-width: 450px;
-  }
-
-  .tagline {
-    font-size: 2rem;
-  }
-
-  .choose-game {
-    font-size: 2.8rem;
-  }
-
+  .container { max-width: 1100px; }
   .games-grid {
     flex-direction: row;
     justify-content: center;
-    gap: 25px;
+    flex-wrap: wrap;
   }
-
-  .game-card {
-    flex: 1;
-    max-width: 360px;
-  }
-
-  .game-logo {
-    max-width: 200px;
-  }
-
-  .info-box p {
-    font-size: 1rem;
-  }
+  .game-card { flex: 0 1 340px; }
 }
 
-@media (min-width: 1024px) {
-  .logo {
-    max-width: 520px;
-  }
-
-  .tagline {
-    font-size: 2.3rem;
-  }
-
-  .choose-game {
-    font-size: 3.2rem;
-  }
-
-  .games-grid {
-    gap: 35px;
-  }
-
-  .game-logo {
-    max-width: 220px;
-  }
-}
-
-/* Small Mobile Adjustments */
 @media (max-width: 380px) {
-  .logo {
-    max-width: 320px;
-  }
-
-  .tagline {
-    font-size: 1.3rem;
-  }
-
-  .choose-game {
-    font-size: 1.7rem;
-  }
-
-  .game-logo {
-    max-width: 160px;
-  }
-
-  .info-box p {
-    font-size: 0.85rem;
-  }
-
-  .play-btn {
-    font-size: 0.95rem;
-    padding: 12px 18px;
-  }
+  .choose-game { font-size: 1.8rem; }
+  .info-box p { font-size: 0.85rem; }
 }
