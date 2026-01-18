@@ -173,7 +173,7 @@ body {
   border: 3px solid rgba(255,255,255,0.6);
 }
 
-.players-section h2 {
+.lobby-title {
   font-family: 'Chewy', cursive;
   color: #23395D;
   font-size: 1.8rem;
@@ -304,38 +304,70 @@ body {
 }
 
 /* Rules Section */
-.rules-section {
+.rules-card {
   margin-top: 25px;
   padding: 20px;
-  background: rgba(178,235,242,0.3);
-  border-radius: 15px;
-  border: 2px dashed #54A0FF;
+  background: linear-gradient(135deg, rgba(255,182,193,0.2), rgba(178,235,242,0.2));
+  border-radius: 20px;
+  border: 3px solid rgba(84,160,255,0.3);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-.rules-section h3 {
+.rules-card h3 {
   font-family: 'Chewy', cursive;
   color: #23395D;
-  margin-bottom: 12px;
-  font-size: 1.3rem;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  text-align: center;
 }
 
-.rules-section ul {
-  list-style: none;
-  padding-left: 0;
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.rules-section li {
-  padding: 8px 0;
+.rule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 12px;
+  border: 2px solid rgba(255,182,193,0.4);
+  transition: all 0.3s;
+}
+
+.rule-item:hover {
+  transform: translateX(5px);
+  border-color: #FFB6C1;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.rule-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFB6C1, #FF9AA2);
+  border-radius: 10px;
+}
+
+.rule-text {
+  flex: 1;
   color: #2c3e50;
-  font-weight: 600;
   font-size: 0.95rem;
+  line-height: 1.5;
 }
 
-.rules-section li:before {
-  content: "✓ ";
-  color: #27ae60;
-  font-weight: bold;
-  margin-right: 8px;
+.rule-text strong {
+  color: #23395D;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 3px;
 }
 
 /* ========== QUESTION SCREEN ========== */
