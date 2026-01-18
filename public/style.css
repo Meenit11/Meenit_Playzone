@@ -10,35 +10,34 @@
 
 body {
   font-family: 'Fredoka', sans-serif;
-  background: linear-gradient(135deg,
-    #667eea 0%,
-    #764ba2 20%,
-    #f093fb 40%,
-    #f5576c 60%,
-    #ff9a56 80%,
-    #ffd93d 100%
-  );
+  background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c, #ff9a56, #ffd93d);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
-  /* Reduced top padding to move logo up */
-  padding: 5px 15px 20px 15px; 
+  /* Removed top padding completely */
+  padding: 0 15px 20px 15px; 
+  margin: 0;
   overflow-x: hidden;
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto; /* Keeps it centered horizontally, but 0 on top */
 }
 
 /* Header Section */
 .header {
   text-align: center;
   margin-bottom: 25px;
-  padding-top: 0; /* Removed extra padding */
+  padding-top: 0; /* Ensures no internal padding */
 }
 
 .logo {
+  display: block; /* Removes any baseline inline spacing */
   width: 100%;
   max-width: 380px;
   height: auto;
-  margin-top: 0; /* Ensure no top margin */
-  margin-bottom: 12px;
+  margin: 0 auto 12px auto; /* Force 0 margin at the top */
   filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
   animation: logoFloat 3s ease-in-out infinite;
 }
