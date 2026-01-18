@@ -155,10 +155,12 @@ function setupEventListeners() {
 
 // Room Created
 socket.on('roomCreated', ({ roomId, inviteLink: link }) => {
+  console.log('✅ Room created:', roomId); // Debug
   gameState.roomId = roomId;
   inviteLink.value = link;
   switchScreen('lobby');
   showGMControls();
+  console.log('Switched to lobby, GM controls shown'); // Debug
 });
 
 // Joined Room
@@ -366,6 +368,15 @@ function handleCreateJoin() {
 }
 
 function startGame() {
+  console.log('Start Game clicked!'); // Debug
+  console.log('Room ID:', gameState.roomId); // Debug
+  console.log('Is GM:', gameState.isGM); // Debug
+  
+  if (!gameState.roomId) {
+    alert('Error: Room ID not found');
+    return;
+  }
+  
   socket.emit('startGame', { roomId: gameState.roomId });
 }
 
@@ -427,7 +438,7 @@ function renderPlayersList(players) {
     if (player.isGM) {
       const badge = document.createElement('span');
       badge.className = 'player-badge';
-      badge.textContent = '👑 GM';
+      badge.textContent = '👑 Game Master';
       nameSection.appendChild(badge);
     }
     
