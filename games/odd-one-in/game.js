@@ -183,6 +183,10 @@ socket.on('updatePlayers', (players) => {
 
 // Game Started
 socket.on('gameStarted', ({ question, timeRemaining }) => {
+  console.log('✅ Game started event received'); // Debug
+  console.log('Question:', question); // Debug
+  console.log('Time:', timeRemaining); // Debug
+  
   switchScreen('question');
   questionText.textContent = question;
   timerDisplay.textContent = timeRemaining;
@@ -194,6 +198,8 @@ socket.on('gameStarted', ({ question, timeRemaining }) => {
     pauseBtn.classList.remove('hidden');
     resumeBtn.classList.add('hidden');
   }
+  
+  console.log('Switched to question screen'); // Debug
 });
 
 // Timer Update
