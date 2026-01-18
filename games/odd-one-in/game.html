@@ -32,7 +32,7 @@
       <!-- Header -->
       <div class="lobby-header">
         <img src="/images/odd-one-in-logo.png" alt="Odd One In" class="lobby-logo">
-        <button onclick="backToHome()" class="btn-back">← Home</button>
+        <button id="backBtn" onclick="backToHome()" class="btn-back" style="display: none;">← Home</button>
       </div>
 
       <!-- Invite Section (GM Only) -->
@@ -52,12 +52,56 @@
 
       <!-- Rules -->
       <div class="rules-card">
-        <h3>🎯 Quick Rules</h3>
-        <div class="rules-grid">
-          <div class="rule-badge">⏱️ 10 seconds</div>
-          <div class="rule-badge">🚫 Don't match</div>
-          <div class="rule-badge">✅ Be unique</div>
-          <div class="rule-badge">🏆 Last one wins</div>
+        <h3>🎯 Game Rules</h3>
+        <div class="rules-list">
+          <div class="rule-item">
+            <span class="rule-icon">❓</span>
+            <div class="rule-text">
+              <strong>The Question:</strong> Host asks a simple question (e.g., "Name a Fruit")
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">⏱️</span>
+            <div class="rule-text">
+              <strong>10-Second Rule:</strong> You have exactly 10 seconds to type and send your answer
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">🚫</span>
+            <div class="rule-text">
+              <strong>Silence Penalty:</strong> No answer? You're eliminated!
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">❌</span>
+            <div class="rule-text">
+              <strong>Match Trap:</strong> Same answer as others? Everyone with that answer is OUT!
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">✅</span>
+            <div class="rule-text">
+              <strong>Survival Rule:</strong> Only unique answers survive to next round
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">🔒</span>
+            <div class="rule-text">
+              <strong>No Editing:</strong> Once sent, you cannot change your answer
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">🏆</span>
+            <div class="rule-text">
+              <strong>The Winner:</strong> Last person standing wins!
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">👑</span>
+            <div class="rule-text">
+              <strong>Host's Decision:</strong> Spelling mistakes OK if meaning is clear. Host's decision is final!
+            </div>
+          </div>
         </div>
       </div>
 
@@ -67,7 +111,7 @@
       </button>
       
       <div id="waitingMsg" class="waiting-msg">
-        ⏳ Waiting for Game Master...
+        ⏳ Waiting for Game Master to start...
       </div>
 
     </div>
@@ -81,7 +125,7 @@
       <div class="game-header">
         <div class="game-stats">
           <span class="stat-badge">Round <strong id="roundNum">1</strong></span>
-          <span class="stat-badge">Players <strong id="activePlayers">0</strong></span>
+          <span class="stat-badge">Alive <strong id="activePlayers">0</strong></span>
         </div>
         <div class="timer-circle" id="timerCircle">
           <span id="timerNum">10</span>
@@ -90,11 +134,11 @@
 
       <!-- GM Controls (Only for Game Master) -->
       <div id="gmControls" class="gm-panel" style="display: none;">
-        <button onclick="pauseTimer()" class="gm-btn">⏸️</button>
-        <button onclick="resumeTimer()" class="gm-btn">▶️</button>
-        <button onclick="skipQuestion()" class="gm-btn">⏭️</button>
-        <button onclick="editQuestion()" class="gm-btn">✏️</button>
-        <button onclick="resetGame()" class="gm-btn danger">🔄</button>
+        <button onclick="pauseTimer()" class="gm-btn" title="Pause Timer">⏸️</button>
+        <button onclick="resumeTimer()" class="gm-btn" title="Resume Timer">▶️</button>
+        <button onclick="skipQuestion()" class="gm-btn" title="Skip Question">⏭️</button>
+        <button onclick="editQuestion()" class="gm-btn" title="Edit Question">✏️</button>
+        <button onclick="resetGame()" class="gm-btn danger" title="Reset Game">🔄</button>
       </div>
 
       <!-- Question Card -->
@@ -104,16 +148,16 @@
 
       <!-- Answer Input Section -->
       <div id="answerSection" class="answer-section">
-        <input type="text" id="answerInput" placeholder="Type your answer..." maxlength="50" autocomplete="off">
+        <input type="text" id="answerInput" placeholder="Type your unique answer..." maxlength="50" autocomplete="off">
         <button onclick="submitAnswer()" class="btn-submit">
-          <span>SUBMIT</span>
+          <span>SUBMIT ANSWER</span>
         </button>
         <div id="answerStatus" class="answer-status"></div>
       </div>
 
       <!-- Answer Review Section (After timer ends) -->
       <div id="reviewSection" class="review-section" style="display: none;">
-        <h3 class="review-title">📊 ANSWERS</h3>
+        <h3 class="review-title">📊 ROUND RESULTS</h3>
         <div id="answerGroups"></div>
         <button id="nextRoundBtn" onclick="nextRound()" class="btn-next" style="display: none;">
           ▶️ NEXT ROUND
@@ -123,9 +167,9 @@
       <!-- Eliminated Message -->
       <div id="eliminatedMsg" class="eliminated-msg" style="display: none;">
         <div class="eliminated-icon">💀</div>
-        <h2>YOU'RE OUT!</h2>
-        <p>Watch the chaos unfold...</p>
-        <p id="gmNote" style="display: none;">👑 But you still control the game!</p>
+        <h2>YOU'RE ELIMINATED!</h2>
+        <p>Watch others battle it out...</p>
+        <p id="gmNote" style="display: none;">👑 But you still control the game as Host!</p>
       </div>
 
     </div>
@@ -148,7 +192,7 @@
 
       <div class="winner-actions">
         <button onclick="playAgain()" class="btn-primary">🔄 PLAY AGAIN</button>
-        <button onclick="backToHome()" class="btn-secondary">🏠 HOME</button>
+        <button id="homeBtn" onclick="backToHome()" class="btn-secondary" style="display: none;">🏠 HOME</button>
       </div>
 
     </div>
