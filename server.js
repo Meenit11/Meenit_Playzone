@@ -164,19 +164,34 @@ io.on('connection', (socket) => {
   // Start Game
   socket.on('startGame', ({ roomId }) => {
     const room = rooms.get(roomId);
-    if (!room || room.gm !== socket.id) return;
-
-    if (room.players.length < 2) {
-      socket.emit('error', { message: 'Need at least 2 players to start' });
+    
+    console.log('📢 Start Game requested for room:', roomId); // Debug
+    console.log('Room exists?', !!room); // Debug
+    console.log('Socket is GM?', room ? room.gm === socket.id : 'N/A'); // Debug
+    
+    if (!room || room.gm !== socket.id) {
+      console.log('❌ Unauthorized or room not found'); // Debug
+      socket.emit('error', { message: 'Only Game Master can start the game' });
       return;
     }
 
+    if (room.players.length < 1) {
+      console.log('❌ Not enough players'); // Debug
+      socket.emit('error', { message: 'Need at least 1 player to start' });
+      return;
+    }
+
+    console.log('✅ Starting game with', room.players.length, 'players'); // Debug
+    
     room.state = 'question';
     room.answers = {};
     
     const activePlayers = room.players.filter(p => !p.eliminated).length;
     const tier = getQuestionTier(activePlayers);
     room.currentQuestion = getRandomQuestion(tier, room.usedQuestions);
+    
+    console.log('Question tier:', tier); // Debug
+    console.log('Question:', room.currentQuestion); // Debug
     
     if (room.currentQuestion) {
       room.usedQuestions.push(room.currentQuestion);
@@ -189,6 +204,7 @@ io.on('connection', (socket) => {
       timeRemaining: room.timeRemaining
     });
 
+    console.log('✅ Game started signal sent'); // Debug
     startTimer(roomId);
   });
 
