@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
 /* 1. Global Reset to eliminate white space */
+/* Global Reset */
 * {
   margin: 0;
   padding: 0;
@@ -11,58 +12,71 @@
 
 body {
   font-family: 'Fredoka', sans-serif;
-  /* Cool Static Gradient: Deep Blue -> Purple -> Soft Pink */
-  background: linear-gradient(135deg, 
-    #4158D0 0%, 
-    #C850C0 46%, 
-    #FFCC70 100%
-  );
-  background-attachment: fixed; /* Keeps bg steady while scrolling */
+  /* Light & Bright Gradient */
+  background: linear-gradient(135deg, #E0C3FC 0%, #FBC2EB 50%, #A6C1EE 100%);
+  background-attachment: fixed;
   min-height: 100vh;
-  padding: 0 15px 20px 15px; /* Zero top padding */
+  
+  /* Centering Logic */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers horizontally */
+  
+  /* Remove top space */
+  padding: 0 15px 40px 15px; 
   overflow-x: hidden;
 }
 
-/* 2. Header Fixes */
+.container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Ensures children like logo and text are centered */
+}
+
+/* Header Section */
 .header {
+  width: 100%;
   text-align: center;
   margin-bottom: 25px;
-  padding-top: 0; /* Ensures logo touches the very top */
+  padding-top: 0;
 }
 
 .logo {
-  display: block; 
+  display: block;
   width: 100%;
   max-width: 380px;
   height: auto;
-  margin: 0 auto 12px auto; /* Force 0 margin at top */
-  filter: drop-shadow(0 12px 35px rgba(0,0,0,0.3));
-  /* Removed animation to keep it flush at the top */
+  margin: 0 auto 12px auto; /* Centers the image */
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));
 }
 
 .tagline {
   font-family: 'Chewy', cursive;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #ffffff; /* Solid White */
-  background: none; /* No gradient */
-  -webkit-background-clip: initial;
-  -webkit-text-fill-color: initial;
-  animation: none;
-  line-height: 1.5;
-  text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-  padding: 0 15px;
+  color: #4A4A4A; /* Darker gray for better contrast on light bg */
+  line-height: 1.4;
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+  margin: 0 auto;
+  max-width: 90%;
 }
 
-/* 3. Game Section Adjustments */
+/* Choose Your Game Section */
+.game-title-section {
+  width: 100%;
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+
 .choose-game {
   font-family: 'Chewy', cursive;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  /* Optional: remove bounce if you want a completely static look */
-  animation: bounce 2s ease-in-out infinite;
+  font-size: 2.2rem;
+  color: #FFFFFF;
+  /* Outline effect to make white text pop on light bg */
+  text-shadow: 2px 2px 0px #FF7EB3, 4px 4px 10px rgba(0,0,0,0.1);
 }
 
 @keyframes bounce {
