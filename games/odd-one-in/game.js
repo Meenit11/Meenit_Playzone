@@ -1,4 +1,4 @@
-// games/odd-one-in/game.js
+// Odd One In - Game Logic
 
 const socket = io();
 
@@ -7,15 +7,13 @@ let isGameMaster = false;
 let playerName = null;
 let isEliminated = false;
 
-// Screen management
+// ========== SCREEN MANAGEMENT ==========
 function showScreen(screenId) {
-  document.querySelectorAll('.screen').forEach(screen => {
-    screen.classList.remove('active');
-  });
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(screenId).classList.add('active');
 }
 
-// Initialize on page load
+// ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   currentRoomId = urlParams.get('room');
@@ -28,19 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   isGameMaster = isGM;
+  showScreen('nameScreen');
   
-  // Always start at name entry screen
-  showScreen('nameEntryScreen');
-  
-  // Enter key listeners
+  // Enter key listener for name input
   const nameInput = document.getElementById('playerNameInput');
   if (nameInput) {
+    nameInput.focus();
     nameInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') joinGame();
     });
-    nameInput.focus();
   }
   
+  // Enter key listener for answer input
   const answerInput = document.getElementById('answerInput');
   if (answerInput) {
     answerInput.addEventListener('keypress', (e) => {
@@ -49,19 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ========== JOIN GAME ==========
 function joinGame() {
   const nameInput = document.getElementById('playerNameInput');
   playerName = nameInput.value.trim();
   
   if (!playerName) {
     alert('Please enter your name!');
+    nameInput.focus();
     return;
   }
   
   socket.emit('joinGame', {
     roomId: currentRoomId,
     playerName: playerName,
-    isGameMaster: isGameMaster
+    isGameMaster: isGameMaster,
+    gameType: 'odd-one-in'
   });
 }
 
@@ -69,22 +69,26 @@ function backToHome() {
   window.location.href = '/';
 }
 
-function copyInviteLink() {
+function copyInvite() {
   const inviteLink = document.getElementById('inviteLink');
   inviteLink.select();
-  inviteLink.setSelectionRange(0, 99999); // For mobile
+  inviteLink.setSelectionRange(0, 99999);
   document.execCommand('copy');
   
   const btn = event.target;
   const originalText = btn.textContent;
   btn.textContent = '✅ Copied!';
+  btn.style.background = '#4CAF50';
+  
   setTimeout(() => {
     btn.textContent = originalText;
+    btn.style.background = '';
   }, 2000);
 }
 
+// ========== GAME CONTROLS ==========
 function startGame() {
-  socket.emit('startGame', currentRoomId);
+  socket.emit('startGame', { roomId: currentRoomId });
 }
 
 function submitAnswer() {
@@ -93,6 +97,7 @@ function submitAnswer() {
   
   if (!answer) {
     alert('Please enter an answer!');
+    answerInput.focus();
     return;
   }
   
@@ -102,7 +107,6 @@ function submitAnswer() {
   });
 }
 
-// Game Master Controls
 function pauseTimer() {
   socket.emit('pauseTimer', currentRoomId);
 }
@@ -112,7 +116,9 @@ function resumeTimer() {
 }
 
 function skipQuestion() {
-  socket.emit('skipQuestion', currentRoomId);
+  if (confirm('Skip this question?')) {
+    socket.emit('skipQuestion', currentRoomId);
+  }
 }
 
 function editQuestion() {
@@ -146,7 +152,8 @@ function playAgain() {
   socket.emit('resetGame', currentRoomId);
 }
 
-// Socket Event Listeners
+// ========== SOCKET EVENTS ==========
+
 socket.on('roomJoined', (data) => {
   isGameMaster = data.isGameMaster;
   showScreen('lobbyScreen');
@@ -155,8 +162,8 @@ socket.on('roomJoined', (data) => {
     document.getElementById('inviteSection').style.display = 'block';
     const inviteLink = `${window.location.origin}/odd-one-in?room=${data.roomId}`;
     document.getElementById('inviteLink').value = inviteLink;
-    document.getElementById('startGameBtn').style.display = 'block';
-    document.getElementById('waitingMessage').style.display = 'none';
+    document.getElementById('startBtn').style.display = 'block';
+    document.getElementById('waitingMsg').style.display = 'none';
   }
 });
 
@@ -168,11 +175,9 @@ socket.on('playerListUpdate', (data) => {
   playerList.innerHTML = '';
   
   data.players.forEach(player => {
-    const playerItem = document.createElement('div');
-    playerItem.className = 'player-item';
-    if (player.eliminated) {
-      playerItem.classList.add('eliminated');
-    }
+    const item = document.createElement('div');
+    item.className = 'player-item';
+    if (player.eliminated) item.classList.add('eliminated');
     
     const nameDiv = document.createElement('div');
     const nameSpan = document.createElement('span');
@@ -187,24 +192,25 @@ socket.on('playerListUpdate', (data) => {
     }
     
     nameDiv.appendChild(nameSpan);
-    playerItem.appendChild(nameDiv);
+    item.appendChild(nameDiv);
     
     if (isGameMaster && player.id !== socket.id) {
       const removeBtn = document.createElement('button');
       removeBtn.className = 'btn-remove';
-      removeBtn.textContent = '❌ Remove';
+      removeBtn.textContent = '❌';
       removeBtn.onclick = () => {
         socket.emit('removePlayer', {
           roomId: currentRoomId,
           playerId: player.id
         });
       };
-      playerItem.appendChild(removeBtn);
+      item.appendChild(removeBtn);
     }
     
-    playerList.appendChild(playerItem);
+    playerList.appendChild(item);
   });
   
+  // Update active players count in game
   const activePlayersEl = document.getElementById('activePlayers');
   if (activePlayersEl) {
     const activePlayers = data.players.filter(p => !p.eliminated).length;
@@ -222,25 +228,28 @@ socket.on('gameStarted', (data) => {
   isEliminated = false;
   
   if (isGameMaster) {
-    document.getElementById('gameMasterControls').style.display = 'block';
+    document.getElementById('gmControls').style.display = 'flex';
   }
   
-  document.getElementById('roundNumber').textContent = data.round;
-  document.getElementById('currentQuestion').textContent = data.question;
-  document.getElementById('timerDisplay').textContent = 'Ready';
+  document.getElementById('roundNum').textContent = data.round;
+  document.getElementById('questionText').textContent = data.question;
+  document.getElementById('timerNum').textContent = 'Ready';
   
-  document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').disabled = true;
+  const answerInput = document.getElementById('answerInput');
+  answerInput.value = '';
+  answerInput.disabled = true;
+  
   document.getElementById('answerStatus').textContent = '';
-  document.getElementById('answerReviewSection').style.display = 'none';
-  document.getElementById('eliminatedMessage').style.display = 'none';
-  document.getElementById('answerInputSection').style.display = 'block';
+  document.getElementById('reviewSection').style.display = 'none';
+  document.getElementById('eliminatedMsg').style.display = 'none';
+  document.getElementById('answerSection').style.display = 'block';
 });
 
 socket.on('timerStarted', (data) => {
   if (!isEliminated) {
-    document.getElementById('answerInput').disabled = false;
-    document.getElementById('answerInput').focus();
+    const answerInput = document.getElementById('answerInput');
+    answerInput.disabled = false;
+    answerInput.focus();
   }
   updateTimer(data.timeLeft);
 });
@@ -250,17 +259,15 @@ socket.on('timerUpdate', (data) => {
 });
 
 socket.on('timerPaused', () => {
-  const timerCircle = document.getElementById('timerCircle');
-  timerCircle.style.opacity = '0.5';
+  document.getElementById('timerCircle').style.opacity = '0.5';
 });
 
 socket.on('timerResumed', () => {
-  const timerCircle = document.getElementById('timerCircle');
-  timerCircle.style.opacity = '1';
+  document.getElementById('timerCircle').style.opacity = '1';
 });
 
 socket.on('questionUpdated', (data) => {
-  document.getElementById('currentQuestion').textContent = data.question;
+  document.getElementById('questionText').textContent = data.question;
 });
 
 socket.on('answerSubmitted', (data) => {
@@ -273,8 +280,8 @@ socket.on('answerSubmitted', (data) => {
 });
 
 socket.on('roundEnded', (data) => {
-  document.getElementById('answerInputSection').style.display = 'none';
-  document.getElementById('answerReviewSection').style.display = 'block';
+  document.getElementById('answerSection').style.display = 'none';
+  document.getElementById('reviewSection').style.display = 'block';
   
   displayAnswerGroups(data.answerGroups);
   
@@ -286,38 +293,40 @@ socket.on('roundEnded', (data) => {
 socket.on('playerEliminated', (data) => {
   if (data.playerId === socket.id) {
     isEliminated = true;
-    document.getElementById('eliminatedMessage').style.display = 'block';
-    document.getElementById('answerInputSection').style.display = 'none';
+    document.getElementById('eliminatedMsg').style.display = 'block';
+    document.getElementById('answerSection').style.display = 'none';
     
     if (isGameMaster) {
-      document.getElementById('gmEliminatedNote').style.display = 'block';
+      document.getElementById('gmNote').style.display = 'block';
     }
   }
 });
 
 socket.on('nextRound', (data) => {
-  document.getElementById('roundNumber').textContent = data.round;
-  document.getElementById('currentQuestion').textContent = data.question;
-  document.getElementById('timerDisplay').textContent = 'Ready';
+  document.getElementById('roundNum').textContent = data.round;
+  document.getElementById('questionText').textContent = data.question;
+  document.getElementById('timerNum').textContent = 'Ready';
   
-  document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').disabled = true;
+  const answerInput = document.getElementById('answerInput');
+  answerInput.value = '';
+  answerInput.disabled = true;
+  
   document.getElementById('answerStatus').textContent = '';
-  document.getElementById('answerReviewSection').style.display = 'none';
+  document.getElementById('reviewSection').style.display = 'none';
   
   if (!isEliminated) {
-    document.getElementById('answerInputSection').style.display = 'block';
+    document.getElementById('answerSection').style.display = 'block';
   }
 });
 
 socket.on('gameEnded', (data) => {
   showScreen('winnerScreen');
   
-  const winnerDisplay = document.getElementById('winnerDisplay');
+  const winnerName = document.getElementById('winnerName');
   if (data.winner) {
-    winnerDisplay.textContent = `🏆 ${data.winner.name} WINS! 🏆`;
+    winnerName.textContent = `🏆 ${data.winner.name} WINS! 🏆`;
   } else {
-    winnerDisplay.textContent = '🤝 NO WINNER - TIE! 🤝';
+    winnerName.textContent = '🤝 NO WINNER - TIE! 🤝';
   }
   
   displayStandings(data.players);
@@ -330,16 +339,17 @@ socket.on('gameReset', () => {
   document.getElementById('answerInput').value = '';
   document.getElementById('answerInput').disabled = false;
   document.getElementById('answerStatus').textContent = '';
-  document.getElementById('answerReviewSection').style.display = 'none';
-  document.getElementById('eliminatedMessage').style.display = 'none';
+  document.getElementById('reviewSection').style.display = 'none';
+  document.getElementById('eliminatedMsg').style.display = 'none';
 });
 
-// Helper Functions
+// ========== HELPER FUNCTIONS ==========
+
 function updateTimer(timeLeft) {
-  const timerDisplay = document.getElementById('timerDisplay');
+  const timerNum = document.getElementById('timerNum');
   const timerCircle = document.getElementById('timerCircle');
   
-  timerDisplay.textContent = timeLeft;
+  timerNum.textContent = timeLeft;
   
   if (timeLeft <= 3 && timeLeft > 0) {
     timerCircle.classList.add('warning');
@@ -349,7 +359,7 @@ function updateTimer(timeLeft) {
   
   if (timeLeft === 0) {
     document.getElementById('answerInput').disabled = true;
-    timerDisplay.textContent = '⏰';
+    timerNum.textContent = '⏰';
   }
 }
 
@@ -357,16 +367,16 @@ function displayAnswerGroups(groups) {
   const container = document.getElementById('answerGroups');
   container.innerHTML = '';
   
-  // Duplicates first
+  // Display duplicates
   if (groups.duplicates && groups.duplicates.length > 0) {
     const duplicatesSection = document.createElement('div');
     duplicatesSection.className = 'answer-group duplicates';
-    duplicatesSection.innerHTML = '<h4>🚨 DUPLICATE ANSWERS (DANGER!)</h4>';
+    duplicatesSection.innerHTML = '<h4>🚨 DUPLICATE ANSWERS</h4>';
     
     groups.duplicates.forEach(group => {
       const groupLabel = document.createElement('div');
       groupLabel.className = 'group-label';
-      groupLabel.innerHTML = `<strong>"${group.answer}"</strong> - ${group.count} players matched`;
+      groupLabel.innerHTML = `<strong>"${group.answer}"</strong> - ${group.count} players`;
       duplicatesSection.appendChild(groupLabel);
       
       group.players.forEach(player => {
@@ -378,11 +388,11 @@ function displayAnswerGroups(groups) {
     container.appendChild(duplicatesSection);
   }
   
-  // Unique answers
+  // Display unique answers
   if (groups.unique && groups.unique.length > 0) {
     const uniqueSection = document.createElement('div');
     uniqueSection.className = 'answer-group unique';
-    uniqueSection.innerHTML = '<h4>✅ UNIQUE ANSWERS (SAFE!)</h4>';
+    uniqueSection.innerHTML = '<h4>✅ UNIQUE ANSWERS</h4>';
     
     groups.unique.forEach(player => {
       const item = createAnswerItem(player);
@@ -408,7 +418,7 @@ function createAnswerItem(player) {
     
     const eliminateBtn = document.createElement('button');
     eliminateBtn.className = 'btn-eliminate';
-    eliminateBtn.textContent = '❌ OUT';
+    eliminateBtn.textContent = '❌';
     eliminateBtn.onclick = () => eliminatePlayer(player.playerId);
     
     actions.appendChild(eliminateBtn);
@@ -419,7 +429,7 @@ function createAnswerItem(player) {
 }
 
 function displayStandings(players) {
-  const container = document.getElementById('finalStandings');
+  const container = document.getElementById('standingsList');
   container.innerHTML = '';
   
   const sorted = [...players].sort((a, b) => {
