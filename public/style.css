@@ -61,11 +61,7 @@ body {
   font-family: 'Chewy', cursive;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #FFB6C1, #FFD700, #87CEEB, #FF69B4);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
   animation: none;
   line-height: 1.5;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
