@@ -1,4 +1,4 @@
-// Odd One In - Enhanced Game Logic
+// Odd One In - Fixed Game Logic
 
 const socket = io();
 
@@ -6,6 +6,7 @@ let currentRoomId = null;
 let isGameMaster = false;
 let playerName = null;
 let isEliminated = false;
+let hasSubmittedAnswer = false;
 
 // ========== SCREEN MANAGEMENT ==========
 function showScreen(screenId) {
@@ -41,7 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const answerInput = document.getElementById('answerInput');
   if (answerInput) {
     answerInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') submitAnswer();
+      if (e.key === 'Enter' && !answerInput.disabled && !hasSubmittedAnswer) {
+        submitAnswer();
+      }
     });
   }
 });
@@ -67,6 +70,7 @@ function joinGame() {
 
 function backToHome() {
   if (confirm('Are you sure you want to leave the game?')) {
+    socket.disconnect();
     window.location.href = '/';
   }
 }
@@ -88,21 +92,25 @@ function copyInvite() {
       btn.style.background = '';
     }, 2000);
   } catch (err) {
-    alert('Failed to copy. Please copy manually.');
+    alert('Failed to copy. Please copy manually: ' + inviteLink.value);
   }
 }
 
 // ========== GAME CONTROLS ==========
 function startGame() {
-  const playerCount = document.querySelectorAll('.player-item').length;
+  const playerCount = document.querySelectorAll('.player-item:not(.eliminated)').length;
   if (playerCount < 3) {
-    alert('Need at least 3 players to start!');
+    alert('Need at least 3 active players to start!');
     return;
   }
   socket.emit('startGame', { roomId: currentRoomId });
 }
 
 function submitAnswer() {
+  if (hasSubmittedAnswer) {
+    return; // Prevent double submission
+  }
+  
   const answerInput = document.getElementById('answerInput');
   const answer = answerInput.value.trim();
   
@@ -111,6 +119,12 @@ function submitAnswer() {
     answerInput.focus();
     return;
   }
+  
+  if (answerInput.disabled) {
+    return; // Don't submit if disabled
+  }
+  
+  hasSubmittedAnswer = true;
   
   socket.emit('submitAnswer', {
     roomId: currentRoomId,
@@ -257,12 +271,14 @@ socket.on('playerListUpdate', (data) => {
 
 socket.on('removedFromGame', () => {
   alert('You have been removed by the Game Master');
+  socket.disconnect();
   window.location.href = '/';
 });
 
 socket.on('gameStarted', (data) => {
   showScreen('gameScreen');
   isEliminated = false;
+  hasSubmittedAnswer = false;
   
   if (isGameMaster) {
     document.getElementById('gmControls').style.display = 'flex';
@@ -281,14 +297,28 @@ socket.on('gameStarted', (data) => {
   document.getElementById('reviewSection').style.display = 'none';
   document.getElementById('eliminatedMsg').style.display = 'none';
   document.getElementById('answerSection').style.display = 'block';
+  
+  // Reset timer circle
+  const timerCircle = document.getElementById('timerCircle');
+  timerCircle.classList.remove('warning');
+  timerCircle.style.opacity = '1';
+  timerCircle.style.filter = 'grayscale(0)';
 });
 
 socket.on('timerStarted', (data) => {
+  hasSubmittedAnswer = false; // Reset submission flag
+  
   if (!isEliminated) {
     const answerInput = document.getElementById('answerInput');
     answerInput.disabled = false;
     answerInput.focus();
+    
+    // Clear any previous answer status
+    const answerStatus = document.getElementById('answerStatus');
+    answerStatus.textContent = '';
+    answerStatus.className = 'answer-status';
   }
+  
   updateTimer(data.timeLeft);
 });
 
@@ -322,6 +352,8 @@ socket.on('answerSubmitted', (data) => {
 });
 
 socket.on('roundEnded', (data) => {
+  hasSubmittedAnswer = false; // Reset for next round
+  
   document.getElementById('answerSection').style.display = 'none';
   document.getElementById('reviewSection').style.display = 'block';
   document.getElementById('timerNum').textContent = '⏰';
@@ -336,6 +368,7 @@ socket.on('roundEnded', (data) => {
 socket.on('playerEliminated', (data) => {
   if (data.playerId === socket.id) {
     isEliminated = true;
+    hasSubmittedAnswer = false;
     document.getElementById('eliminatedMsg').style.display = 'block';
     document.getElementById('answerSection').style.display = 'none';
     
@@ -345,31 +378,12 @@ socket.on('playerEliminated', (data) => {
   }
   
   // Show notification for all players
-  const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(244,67,54,0.95);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 15px;
-    font-weight: 700;
-    z-index: 1000;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: slideDown 0.5s ease;
-  `;
-  notification.textContent = `💀 ${data.playerName} has been eliminated!`;
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.style.animation = 'slideUp 0.5s ease';
-    setTimeout(() => notification.remove(), 500);
-  }, 3000);
+  showNotification(`💀 ${data.playerName} has been eliminated!`, 'error');
 });
 
 socket.on('nextRound', (data) => {
+  hasSubmittedAnswer = false; // Reset submission flag
+  
   document.getElementById('roundNum').textContent = data.round;
   document.getElementById('questionText').textContent = data.question;
   document.getElementById('timerNum').textContent = 'Ready';
@@ -381,14 +395,22 @@ socket.on('nextRound', (data) => {
   document.getElementById('answerStatus').textContent = '';
   document.getElementById('answerStatus').className = 'answer-status';
   document.getElementById('reviewSection').style.display = 'none';
+  document.getElementById('nextRoundBtn').style.display = 'none';
   
   if (!isEliminated) {
     document.getElementById('answerSection').style.display = 'block';
   }
+  
+  // Reset timer circle
+  const timerCircle = document.getElementById('timerCircle');
+  timerCircle.classList.remove('warning');
+  timerCircle.style.opacity = '1';
+  timerCircle.style.filter = 'grayscale(0)';
 });
 
 socket.on('gameEnded', (data) => {
   showScreen('winnerScreen');
+  hasSubmittedAnswer = false;
   
   const winnerName = document.getElementById('winnerName');
   if (data.winner) {
@@ -409,10 +431,15 @@ socket.on('gameEnded', (data) => {
 socket.on('gameReset', () => {
   showScreen('lobbyScreen');
   isEliminated = false;
+  hasSubmittedAnswer = false;
   
   // Reset all game elements
-  document.getElementById('answerInput').value = '';
-  document.getElementById('answerInput').disabled = false;
+  const answerInput = document.getElementById('answerInput');
+  if (answerInput) {
+    answerInput.value = '';
+    answerInput.disabled = false;
+  }
+  
   document.getElementById('answerStatus').textContent = '';
   document.getElementById('answerStatus').className = 'answer-status';
   document.getElementById('reviewSection').style.display = 'none';
@@ -420,6 +447,7 @@ socket.on('gameReset', () => {
   document.getElementById('timerNum').textContent = '10';
   document.getElementById('questionText').textContent = 'Get ready...';
   document.getElementById('answerSection').style.display = 'block';
+  document.getElementById('nextRoundBtn').style.display = 'none';
   
   const timerCircle = document.getElementById('timerCircle');
   timerCircle.classList.remove('warning');
@@ -429,7 +457,7 @@ socket.on('gameReset', () => {
 
 socket.on('connect_error', (error) => {
   console.error('Connection error:', error);
-  alert('Connection error. Please refresh the page.');
+  showNotification('Connection error. Please refresh the page.', 'error');
 });
 
 socket.on('disconnect', () => {
@@ -437,6 +465,33 @@ socket.on('disconnect', () => {
 });
 
 // ========== HELPER FUNCTIONS ==========
+
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'error' ? 'rgba(244,67,54,0.95)' : 'rgba(76,175,80,0.95)'};
+    color: white;
+    padding: 15px 25px;
+    border-radius: 15px;
+    font-weight: 700;
+    z-index: 10000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.transition = 'all 0.5s ease';
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(-50%) translateY(-20px)';
+    setTimeout(() => notification.remove(), 500);
+  }, 3000);
+}
 
 function updateTimer(timeLeft) {
   const timerNum = document.getElementById('timerNum');
@@ -558,7 +613,7 @@ function createAnswerItem(player, isDuplicate) {
     
     const eliminateBtn = document.createElement('button');
     eliminateBtn.className = 'btn-eliminate';
-    eliminateBtn.textContent = '❌ Eliminate';
+    eliminateBtn.textContent = '❌ OUT';
     eliminateBtn.title = 'Host override: Eliminate this player';
     eliminateBtn.onclick = () => eliminatePlayer(player.playerId);
     
@@ -605,6 +660,7 @@ function displayStandings(players) {
     const rightSide = document.createElement('span');
     rightSide.textContent = status;
     rightSide.style.color = player.eliminated ? '#f44336' : '#4CAF50';
+    rightSide.style.fontWeight = '700';
     
     item.appendChild(leftSide);
     item.appendChild(rightSide);
