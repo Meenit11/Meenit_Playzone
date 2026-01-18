@@ -2,6 +2,11 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -51,11 +56,6 @@ body {
   display: block;
   filter: drop-shadow(0 12px 35px rgba(0,0,0,0.4));
   animation: logoFloat 3s ease-in-out infinite;
-}
-
-@keyframes logoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
 }
 
 .tagline {
