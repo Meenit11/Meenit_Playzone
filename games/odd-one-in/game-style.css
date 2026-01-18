@@ -1,570 +1,717 @@
-// Odd One In - Game Logic
-const socket = io();
+/* Odd One In - Game Styles */
 
-// Game State
-let gameState = {
-  roomId: null,
-  playerName: null,
-  isGM: false,
-  currentScreen: 'name',
-  isEliminated: false
-};
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Chewy&display=swap');
 
-// DOM Elements
-const screens = {
-  name: document.getElementById('nameScreen'),
-  lobby: document.getElementById('lobbyScreen'),
-  question: document.getElementById('questionScreen'),
-  review: document.getElementById('reviewScreen'),
-  winner: document.getElementById('winnerScreen'),
-  eliminated: document.getElementById('eliminatedScreen')
-};
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-// Name Screen Elements
-const playerNameInput = document.getElementById('playerNameInput');
-const createJoinBtn = document.getElementById('createJoinBtn');
-const btnText = document.getElementById('btnText');
+html, body {
+  width: 100%;
+  height: 100%;
+}
 
-// Lobby Elements
-const playersList = document.getElementById('playersList');
-const gmControls = document.getElementById('gmControls');
-const playerWaiting = document.getElementById('playerWaiting');
-const inviteLink = document.getElementById('inviteLink');
-const copyLinkBtn = document.getElementById('copyLinkBtn');
-const startGameBtn = document.getElementById('startGameBtn');
-const backHomeBtn = document.getElementById('backHomeBtn');
+body {
+  font-family: 'Fredoka', sans-serif;
+  background: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow-x: hidden;
+}
 
-// Question Elements
-const timerDisplay = document.getElementById('timerDisplay');
-const questionText = document.getElementById('questionText');
-const answerInput = document.getElementById('answerInput');
-const submitAnswerBtn = document.getElementById('submitAnswerBtn');
-const answerStatus = document.getElementById('answerStatus');
-const gmGameControls = document.getElementById('gmGameControls');
-const submissionCounter = document.getElementById('submissionCounter');
-const submissionCount = document.getElementById('submissionCount');
+.container {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+}
 
-// GM Controls
-const pauseBtn = document.getElementById('pauseBtn');
-const resumeBtn = document.getElementById('resumeBtn');
-const skipBtn = document.getElementById('skipBtn');
-const editBtn = document.getElementById('editBtn');
-const showAnswersBtn = document.getElementById('showAnswersBtn');
-const restartBtn = document.getElementById('restartBtn');
+/* ========== SCREEN MANAGEMENT ========== */
+.screen {
+  display: none;
+  animation: fadeIn 0.5s ease-in-out;
+}
 
-// Review Elements
-const answersGrid = document.getElementById('answersGrid');
-const gmReviewControls = document.getElementById('gmReviewControls');
-const playerReviewWait = document.getElementById('playerReviewWait');
-const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+.screen.active {
+  display: block;
+}
 
-// Winner Elements
-const winnerName = document.getElementById('winnerName');
-const gmWinnerControls = document.getElementById('gmWinnerControls');
-const playerWinnerWait = document.getElementById('playerWinnerWait');
-const playAgainBtn = document.getElementById('playAgainBtn');
-const homeBtn = document.getElementById('homeBtn');
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-// Edit Modal
-const editModal = document.getElementById('editModal');
-const editQuestionInput = document.getElementById('editQuestionInput');
-const confirmEditBtn = document.getElementById('confirmEditBtn');
-const cancelEditBtn = document.getElementById('cancelEditBtn');
+/* ========== LOGO SECTION ========== */
+.logo-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
 
-// ========== INITIALIZATION ==========
-function init() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const roomParam = urlParams.get('room');
-  const gmParam = urlParams.get('gm');
+.main-logo {
+  max-width: 280px;
+  width: 100%;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.15));
+}
 
-  if (gmParam === 'true') {
-    gameState.isGM = true;
-    btnText.textContent = 'Create Game';
-  } else if (roomParam) {
-    gameState.roomId = roomParam;
-    btnText.textContent = 'Join Game';
+.main-logo.small {
+  max-width: 200px;
+  margin-bottom: 15px;
+}
+
+.game-logo {
+  max-width: 220px;
+  width: 100%;
+  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.2));
+}
+
+.game-logo.small {
+  max-width: 160px;
+}
+
+/* ========== NAME SCREEN ========== */
+.name-input-section {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 40px 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+}
+
+#playerNameInput {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 15px;
+  border: 3px solid #FF9AA2;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: 'Fredoka', sans-serif;
+  text-align: center;
+  margin-bottom: 20px;
+  background: white;
+  transition: all 0.3s;
+}
+
+#playerNameInput:focus {
+  outline: none;
+  border-color: #f5576c;
+  box-shadow: 0 0 0 4px rgba(245,87,108,0.2);
+  transform: scale(1.02);
+}
+
+/* ========== BUTTONS ========== */
+.primary-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: 'Fredoka', sans-serif;
+  border: none;
+  color: white;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 8px 20px rgba(245,87,108,0.3);
+}
+
+.primary-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(245,87,108,0.4);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Fredoka', sans-serif;
+  border: 3px solid #95a5a6;
+  color: #2c3e50;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.secondary-btn:hover {
+  background: #ecf0f1;
+  transform: translateY(-2px);
+}
+
+/* ========== LOBBY SCREEN ========== */
+.lobby-content {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+}
+
+.players-section h2 {
+  font-family: 'Chewy', cursive;
+  color: #23395D;
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.players-list {
+  background: rgba(255,255,255,0.7);
+  border-radius: 15px;
+  padding: 15px;
+  margin-bottom: 20px;
+  min-height: 120px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border: 2px solid #FFB6C1;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.player-name {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.player-badge {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-left: 10px;
+}
+
+.remove-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Fredoka', sans-serif;
+  transition: all 0.3s;
+}
+
+.remove-btn:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+/* GM Controls */
+.gm-controls {
+  margin-top: 20px;
+}
+
+.invite-section {
+  margin-bottom: 20px;
+}
+
+.invite-section label {
+  display: block;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.invite-box {
+  display: flex;
+  gap: 10px;
+}
+
+.invite-box input {
+  flex: 1;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 2px solid #54A0FF;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.icon-btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #48DBFB, #54A0FF);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.icon-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Player Waiting */
+.player-waiting {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255,243,205,0.5);
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+.player-waiting p {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #856404;
+}
+
+/* Rules Section */
+.rules-section {
+  margin-top: 25px;
+  padding: 20px;
+  background: rgba(178,235,242,0.3);
+  border-radius: 15px;
+  border: 2px dashed #54A0FF;
+}
+
+.rules-section h3 {
+  font-family: 'Chewy', cursive;
+  color: #23395D;
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+}
+
+.rules-section ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.rules-section li {
+  padding: 8px 0;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.rules-section li:before {
+  content: "✓ ";
+  color: #27ae60;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+/* ========== QUESTION SCREEN ========== */
+.question-content {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+}
+
+.timer-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px;
+}
+
+.timer-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFB347, #FF9F43);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(255,159,67,0.4);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+#timerDisplay {
+  font-family: 'Chewy', cursive;
+  font-size: 2.5rem;
+  color: white;
+  text-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+.question-box {
+  background: rgba(255,255,255,0.7);
+  border-radius: 20px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 3px solid #FFB6C1;
+}
+
+.question-box h2 {
+  font-family: 'Chewy', cursive;
+  color: #23395D;
+  font-size: 1.6rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.answer-section {
+  margin-bottom: 20px;
+}
+
+#answerInput {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 15px;
+  border: 3px solid #48DBFB;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: 'Fredoka', sans-serif;
+  text-align: center;
+  margin-bottom: 15px;
+  background: white;
+  transition: all 0.3s;
+}
+
+#answerInput:focus {
+  outline: none;
+  border-color: #1DD1A1;
+  box-shadow: 0 0 0 4px rgba(29,209,161,0.2);
+}
+
+#answerInput:disabled {
+  background: #ecf0f1;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.answer-status {
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-top: 15px;
+  animation: fadeIn 0.5s;
+}
+
+.answer-status.success {
+  background: rgba(46,213,115,0.2);
+  color: #27ae60;
+  border: 2px solid #27ae60;
+}
+
+/* GM Game Controls */
+.gm-game-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.control-btn {
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 700;
+  font-family: 'Fredoka', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+}
+
+.control-btn.danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.control-btn.danger:hover {
+  box-shadow: 0 8px 20px rgba(231,76,60,0.4);
+}
+
+.submission-counter {
+  text-align: center;
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(178,235,242,0.3);
+  border-radius: 10px;
+}
+
+.submission-counter p {
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+/* ========== REVIEW SCREEN ========== */
+.review-content {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+}
+
+.review-title {
+  font-family: 'Chewy', cursive;
+  color: #23395D;
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.answers-grid {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.answer-card {
+  background: white;
+  border-radius: 15px;
+  padding: 15px 20px;
+  margin-bottom: 12px;
+  border: 3px solid #FFB6C1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.answer-info {
+  flex: 1;
+}
+
+.answer-text {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.answer-text.blank {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+.answer-player {
+  font-size: 0.95rem;
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+.eliminate-btn {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'Fredoka', sans-serif;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.eliminate-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(231,76,60,0.4);
+}
+
+.eliminated-card {
+  opacity: 0.5;
+  border-color: #95a5a6;
+  background: #ecf0f1;
+}
+
+.eliminated-badge {
+  background: #e74c3c;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* ========== WINNER SCREEN ========== */
+.winner-content {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 40px 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+  text-align: center;
+}
+
+.winner-title {
+  font-family: 'Chewy', cursive;
+  font-size: 2.5rem;
+  color: #f5576c;
+  margin-bottom: 25px;
+  text-shadow: 0 3px 10px rgba(245,87,108,0.3);
+  animation: celebration 1s ease-in-out infinite;
+}
+
+@keyframes celebration {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  75% { transform: scale(1.1) rotate(5deg); }
+}
+
+.winner-name-box {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: 20px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(255,215,0,0.4);
+}
+
+#winnerName {
+  font-family: 'Chewy', cursive;
+  font-size: 2rem;
+  color: white;
+  text-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+
+/* ========== ELIMINATED SCREEN ========== */
+.eliminated-content {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 40px 30px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 3px solid rgba(255,255,255,0.6);
+  text-align: center;
+}
+
+.eliminated-title {
+  font-family: 'Chewy', cursive;
+  font-size: 2.2rem;
+  color: #e74c3c;
+  margin-bottom: 20px;
+}
+
+.eliminated-message {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.spectate-message {
+  font-size: 1rem;
+  color: #7f8c8d;
+  font-weight: 600;
+}
+
+/* ========== MODAL ========== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  font-family: 'Chewy', cursive;
+  color: #23395D;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+#editQuestionInput {
+  width: 100%;
+  padding: 15px;
+  border-radius: 12px;
+  border: 3px solid #667eea;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* ========== UTILITY ========== */
+.hidden {
+  display: none !important;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
   }
 
-  setupEventListeners();
-}
-
-// ========== EVENT LISTENERS ==========
-function setupEventListeners() {
-  // Name Screen
-  createJoinBtn.addEventListener('click', handleCreateJoin);
-  playerNameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleCreateJoin();
-  });
-
-  // Lobby
-  copyLinkBtn.addEventListener('click', copyInviteLink);
-  startGameBtn.addEventListener('click', startGame);
-  backHomeBtn.addEventListener('click', () => window.location.href = '/');
-
-  // Question
-  submitAnswerBtn.addEventListener('click', submitAnswer);
-  answerInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') submitAnswer();
-  });
-
-  // GM Controls
-  pauseBtn.addEventListener('click', () => socket.emit('pauseTimer', { roomId: gameState.roomId }));
-  resumeBtn.addEventListener('click', () => socket.emit('resumeTimer', { roomId: gameState.roomId }));
-  skipBtn.addEventListener('click', () => socket.emit('skipQuestion', { roomId: gameState.roomId }));
-  editBtn.addEventListener('click', openEditModal);
-  showAnswersBtn.addEventListener('click', () => socket.emit('showAnswers', { roomId: gameState.roomId }));
-  restartBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to restart the game?')) {
-      socket.emit('restartGame', { roomId: gameState.roomId });
-    }
-  });
-
-  // Review
-  nextQuestionBtn.addEventListener('click', () => socket.emit('nextQuestion', { roomId: gameState.roomId }));
-
-  // Winner
-  playAgainBtn.addEventListener('click', () => socket.emit('restartGame', { roomId: gameState.roomId }));
-  homeBtn.addEventListener('click', () => window.location.href = '/');
-
-  // Edit Modal
-  confirmEditBtn.addEventListener('click', confirmEdit);
-  cancelEditBtn.addEventListener('click', closeEditModal);
-}
-
-// ========== SOCKET EVENT HANDLERS ==========
-
-// Room Created
-socket.on('roomCreated', ({ roomId, inviteLink: link }) => {
-  gameState.roomId = roomId;
-  inviteLink.value = link;
-  switchScreen('lobby');
-  showGMControls();
-});
-
-// Joined Room
-socket.on('joinedRoom', ({ roomId, isGM }) => {
-  gameState.roomId = roomId;
-  gameState.isGM = isGM;
-  switchScreen('lobby');
-  
-  if (isGM) {
-    showGMControls();
-  } else {
-    showPlayerWaiting();
+  .name-input-section,
+  .lobby-content,
+  .question-content,
+  .review-content,
+  .winner-content,
+  .eliminated-content {
+    padding: 20px;
   }
-});
 
-// Update Players
-socket.on('updatePlayers', (players) => {
-  renderPlayersList(players);
-});
-
-// Game Started
-socket.on('gameStarted', ({ question, timeRemaining }) => {
-  switchScreen('question');
-  questionText.textContent = question;
-  timerDisplay.textContent = timeRemaining;
-  resetAnswerSection();
-  
-  if (gameState.isGM) {
-    gmGameControls.classList.remove('hidden');
-    submissionCounter.classList.remove('hidden');
-    pauseBtn.classList.remove('hidden');
-    resumeBtn.classList.add('hidden');
+  .gm-game-controls {
+    grid-template-columns: 1fr;
   }
-});
 
-// Timer Update
-socket.on('timerUpdate', ({ timeRemaining }) => {
-  timerDisplay.textContent = timeRemaining;
-  
-  // Visual warning at 3 seconds
-  if (timeRemaining <= 3) {
-    timerDisplay.parentElement.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
-  } else {
-    timerDisplay.parentElement.style.background = 'linear-gradient(135deg, #FFB347, #FF9F43)';
+  .main-logo {
+    max-width: 220px;
   }
-});
 
-// Timer Paused
-socket.on('timerPaused', ({ timeRemaining }) => {
-  pauseBtn.classList.add('hidden');
-  resumeBtn.classList.remove('hidden');
-  showNotification('Timer Paused', 'info');
-});
-
-// Timer Resumed
-socket.on('timerResumed', ({ timeRemaining }) => {
-  pauseBtn.classList.remove('hidden');
-  resumeBtn.classList.add('hidden');
-  showNotification('Timer Resumed', 'success');
-});
-
-// Answer Submitted
-socket.on('answerSubmitted', () => {
-  answerInput.disabled = true;
-  submitAnswerBtn.disabled = true;
-  answerStatus.textContent = '✓ Answer Submitted!';
-  answerStatus.classList.remove('hidden');
-  answerStatus.classList.add('success');
-});
-
-// Submission Update (GM only)
-socket.on('submissionUpdate', ({ submitted, total }) => {
-  submissionCount.textContent = `${submitted}/${total}`;
-});
-
-// Answers Revealed
-socket.on('answersRevealed', ({ answers }) => {
-  switchScreen('review');
-  renderAnswers(answers);
-  
-  if (gameState.isGM) {
-    gmReviewControls.classList.remove('hidden');
-    playerReviewWait.classList.add('hidden');
-  } else {
-    gmReviewControls.classList.add('hidden');
-    playerReviewWait.classList.remove('hidden');
-  }
-});
-
-// Question Edited
-socket.on('questionEdited', ({ question, timeRemaining }) => {
-  questionText.textContent = question;
-  timerDisplay.textContent = timeRemaining;
-  resetAnswerSection();
-  showNotification('Question Updated!', 'info');
-  closeEditModal();
-});
-
-// Next Question
-socket.on('nextQuestion', ({ question, timeRemaining }) => {
-  switchScreen('question');
-  questionText.textContent = question;
-  timerDisplay.textContent = timeRemaining;
-  resetAnswerSection();
-  
-  if (gameState.isEliminated) {
-    switchScreen('eliminated');
-  }
-});
-
-// Players Eliminated
-socket.on('playersEliminated', ({ eliminatedIds, players }) => {
-  if (eliminatedIds.includes(socket.id)) {
-    gameState.isEliminated = true;
-    switchScreen('eliminated');
-  }
-  
-  renderPlayersList(players);
-  showNotification(`${eliminatedIds.length} player(s) eliminated`, 'warning');
-});
-
-// Game Ended
-socket.on('gameEnded', ({ winner }) => {
-  switchScreen('winner');
-  winnerName.textContent = winner.name;
-  
-  if (gameState.isGM) {
-    gmWinnerControls.classList.remove('hidden');
-    playerWinnerWait.classList.add('hidden');
-  } else {
-    gmWinnerControls.classList.add('hidden');
-    playerWinnerWait.classList.remove('hidden');
-  }
-  
-  createConfetti();
-});
-
-// Game Restarted
-socket.on('gameRestarted', () => {
-  gameState.isEliminated = false;
-  switchScreen('lobby');
-  
-  if (gameState.isGM) {
-    showGMControls();
-  } else {
-    showPlayerWaiting();
-  }
-});
-
-// GM Left
-socket.on('gmLeft', () => {
-  alert('Game Master has left the game. Returning to home...');
-  window.location.href = '/';
-});
-
-// Kicked
-socket.on('kicked', () => {
-  alert('You have been removed from the game.');
-  window.location.href = '/';
-});
-
-// Error
-socket.on('error', ({ message }) => {
-  alert(message);
-});
-
-// ========== GAME FUNCTIONS ==========
-
-function handleCreateJoin() {
-  const name = playerNameInput.value.trim();
-  
-  if (!name) {
-    alert('Please enter your name');
-    return;
-  }
-  
-  if (name.length > 20) {
-    alert('Name must be 20 characters or less');
-    return;
-  }
-  
-  gameState.playerName = name;
-  
-  if (gameState.isGM) {
-    const roomId = generateRoomId();
-    socket.emit('createRoom', { 
-      roomId, 
-      playerName: name, 
-      game: 'odd-one-in' 
-    });
-  } else {
-    socket.emit('joinRoom', { 
-      roomId: gameState.roomId, 
-      playerName: name 
-    });
+  .game-logo {
+    max-width: 180px;
   }
 }
-
-function startGame() {
-  socket.emit('startGame', { roomId: gameState.roomId });
-}
-
-function submitAnswer() {
-  const answer = answerInput.value.trim();
-  
-  if (!answer) {
-    alert('Please enter an answer');
-    return;
-  }
-  
-  socket.emit('submitAnswer', { 
-    roomId: gameState.roomId, 
-    answer 
-  });
-}
-
-function openEditModal() {
-  editQuestionInput.value = questionText.textContent;
-  editModal.classList.remove('hidden');
-}
-
-function closeEditModal() {
-  editModal.classList.add('hidden');
-}
-
-function confirmEdit() {
-  const newQuestion = editQuestionInput.value.trim();
-  
-  if (!newQuestion) {
-    alert('Please enter a question');
-    return;
-  }
-  
-  socket.emit('editQuestion', { 
-    roomId: gameState.roomId, 
-    newQuestion 
-  });
-}
-
-// ========== RENDER FUNCTIONS ==========
-
-function renderPlayersList(players) {
-  playersList.innerHTML = '';
-  
-  players.forEach(player => {
-    const playerItem = document.createElement('div');
-    playerItem.className = 'player-item';
-    
-    const nameSection = document.createElement('div');
-    nameSection.style.display = 'flex';
-    nameSection.style.alignItems = 'center';
-    
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'player-name';
-    nameSpan.textContent = player.name;
-    nameSection.appendChild(nameSpan);
-    
-    if (player.isGM) {
-      const badge = document.createElement('span');
-      badge.className = 'player-badge';
-      badge.textContent = '👑 GM';
-      nameSection.appendChild(badge);
-    }
-    
-    if (player.eliminated) {
-      const elimBadge = document.createElement('span');
-      elimBadge.className = 'eliminated-badge';
-      elimBadge.textContent = '❌ OUT';
-      elimBadge.style.marginLeft = '10px';
-      nameSection.appendChild(elimBadge);
-    }
-    
-    playerItem.appendChild(nameSection);
-    
-    // Remove button for GM
-    if (gameState.isGM && !player.isGM) {
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'remove-btn';
-      removeBtn.textContent = '❌';
-      removeBtn.onclick = () => removePlayer(player.id);
-      playerItem.appendChild(removeBtn);
-    }
-    
-    playersList.appendChild(playerItem);
-  });
-}
-
-function renderAnswers(answers) {
-  answersGrid.innerHTML = '';
-  
-  answers.forEach(answer => {
-    const card = document.createElement('div');
-    card.className = 'answer-card';
-    
-    const info = document.createElement('div');
-    info.className = 'answer-info';
-    
-    const answerText = document.createElement('div');
-    answerText.className = 'answer-text';
-    if (!answer.answer) {
-      answerText.textContent = '— (No Answer)';
-      answerText.classList.add('blank');
-    } else {
-      answerText.textContent = answer.answer;
-    }
-    
-    const playerName = document.createElement('div');
-    playerName.className = 'answer-player';
-    playerName.textContent = answer.playerName + (answer.isGM ? ' 👑' : '');
-    
-    info.appendChild(answerText);
-    info.appendChild(playerName);
-    card.appendChild(info);
-    
-    // Eliminate button for GM
-    if (gameState.isGM) {
-      const elimBtn = document.createElement('button');
-      elimBtn.className = 'eliminate-btn';
-      elimBtn.textContent = '❌ Eliminate';
-      elimBtn.onclick = () => eliminatePlayer(answer.playerId);
-      card.appendChild(elimBtn);
-    }
-    
-    answersGrid.appendChild(card);
-  });
-}
-
-function removePlayer(playerId) {
-  if (confirm('Remove this player?')) {
-    socket.emit('removePlayer', { roomId: gameState.roomId, playerId });
-  }
-}
-
-function eliminatePlayer(playerId) {
-  socket.emit('eliminatePlayers', { 
-    roomId: gameState.roomId, 
-    playerIds: [playerId] 
-  });
-  
-  // Disable the button after elimination
-  event.target.disabled = true;
-  event.target.textContent = '✓ Eliminated';
-  event.target.style.background = '#95a5a6';
-}
-
-// ========== UI HELPERS ==========
-
-function switchScreen(screenName) {
-  Object.values(screens).forEach(screen => {
-    screen.classList.remove('active');
-  });
-  
-  screens[screenName].classList.add('active');
-  gameState.currentScreen = screenName;
-}
-
-function showGMControls() {
-  gmControls.classList.remove('hidden');
-  playerWaiting.classList.add('hidden');
-}
-
-function showPlayerWaiting() {
-  gmControls.classList.add('hidden');
-  playerWaiting.classList.remove('hidden');
-}
-
-function resetAnswerSection() {
-  answerInput.value = '';
-  answerInput.disabled = false;
-  submitAnswerBtn.disabled = false;
-  answerStatus.classList.add('hidden');
-  answerStatus.classList.remove('success');
-  submissionCount.textContent = '0/0';
-}
-
-function copyInviteLink() {
-  inviteLink.select();
-  inviteLink.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(inviteLink.value);
-  
-  copyLinkBtn.textContent = '✓';
-  setTimeout(() => {
-    copyLinkBtn.textContent = '📋';
-  }, 2000);
-}
-
-function generateRoomId() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-function showNotification(message, type) {
-  // Simple notification - you can enhance this
-  console.log(`[${type.toUpperCase()}] ${message}`);
-}
-
-function createConfetti() {
-  const colors = ['#FF6B9D', '#4ECDC4', '#FFE66D', '#667eea', '#FFB347'];
-  
-  for (let i = 0; i < 100; i++) {
-    setTimeout(() => {
-      const confetti = document.createElement('div');
-      confetti.style.position = 'fixed';
-      confetti.style.width = '10px';
-      confetti.style.height = '10px';
-      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-      confetti.style.left = Math.random() * 100 + '%';
-      confetti.style.top = '-20px';
-      confetti.style.borderRadius = '50%';
-      confetti.style.pointerEvents = 'none';
-      confetti.style.zIndex = '9999';
-      confetti.style.transition = 'all 3s ease-out';
-      
-      document.body.appendChild(confetti);
-      
-      setTimeout(() => {
-        confetti.style.top = '100vh';
-        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-        confetti.style.opacity = '0';
-      }, 10);
-      
-      setTimeout(() => {
-        confetti.remove();
-      }, 3000);
-    }, i * 30);
-  }
-}
-
-// ========== START ==========
-init();
